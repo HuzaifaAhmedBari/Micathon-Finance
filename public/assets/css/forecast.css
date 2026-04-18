@@ -1,5 +1,16 @@
 /* HisaabPro — Forecast Page Specific Styles */
 
+@media (max-width: 640px) {
+  #forecast-chart-wrapper {
+    height: 240px !important;
+  }
+
+  #forecast-status {
+    margin: 10px 0;
+    padding: 10px 12px;
+  }
+}
+
 /* ── Forecast status message (cold-start / error) ── */
 #forecast-status {
   display: none;

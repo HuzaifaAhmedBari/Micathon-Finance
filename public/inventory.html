@@ -22,8 +22,9 @@
       <a href="log.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Log Entry</a>
       <span class="nav-section-label" style="margin-top:8px">Account</span>
       <a href="profile.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Profile</a>
+      <a href="payment.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m8-7v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Subscription</a>
     </nav>
-    <div class="sidebar-footer"><a href="profile.html" class="sidebar-user"><div class="user-avatar">IB</div><div class="user-info"><div class="user-name">Imran Bhai</div><div class="user-role">Store Owner</div></div></a></div>
+    <div class="sidebar-footer"><a href="profile.html" class="sidebar-user"><div class="user-avatar" data-placeholder>—</div><div class="user-info"><div class="user-name" data-placeholder></div><div class="user-role" data-placeholder></div></div></a></div>
   </aside>
 
   <div class="main-content">
@@ -88,7 +89,7 @@
         <!-- Inventory Table -->
         <div class="card">
           <div class="card-p" style="padding-bottom:12px">
-            <div class="flex justify-between items-center gap-3">
+            <div class="flex justify-between items-center gap-3 inventory-toolbar">
               <div class="search-wrapper">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"/></svg>
                 <input class="search-input" type="search" id="invSearch" placeholder="Search items..." />
@@ -220,6 +221,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/supabase-config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
 <script src="assets/js/store.js"></script>
 <script src="assets/js/main.js"></script>
 <script src="assets/js/charts.js"></script>

@@ -2,6 +2,36 @@
   "transactions": [
     {
       "date": "2026-04-18",
+      "description": "Electricity Bill",
+      "category": "Utilities",
+      "type": "expense",
+      "amount": 19999,
+      "unit": "pcs",
+      "notes": "",
+      "inventoryItemId": null,
+      "inventoryQtyChange": null,
+      "isUtility": true,
+      "userKey": "ahmedkhan@gmail.com",
+      "storeKey": "kaimkhani general store",
+      "id": "txn_1776533204473"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Basmati Rice",
+      "category": "Grocery",
+      "type": "sale",
+      "amount": 1500,
+      "unit": "kg",
+      "notes": "-1 kg",
+      "inventoryItemId": "inv_1776530622269",
+      "inventoryQtyChange": 1,
+      "isUtility": false,
+      "userKey": "ahmedkhan@gmail.com",
+      "storeKey": "kaimkhani general store",
+      "id": "txn_1776533106269"
+    },
+    {
+      "date": "2026-04-18",
       "description": "Egg",
       "category": "Stock",
       "type": "expense",
@@ -11,7 +41,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 8,
       "isUtility": false,
-      "id": "txn_1776516677732"
+      "id": "txn_1776516677732",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-17",
@@ -206,7 +237,8 @@
       "inventoryItemId": "inv_1776496799608",
       "inventoryQtyChange": 12,
       "isUtility": false,
-      "id": "txn_1776516054276"
+      "id": "txn_1776516054276",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -219,7 +251,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 160,
       "isUtility": false,
-      "id": "txn_1776499397466"
+      "id": "txn_1776499397466",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -232,7 +265,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 9,
       "isUtility": false,
-      "id": "txn_1776499382046"
+      "id": "txn_1776499382046",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -245,7 +279,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 108,
       "isUtility": false,
-      "id": "txn_1776499280048"
+      "id": "txn_1776499280048",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -258,7 +293,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 120,
       "isUtility": false,
-      "id": "txn_1776499181562"
+      "id": "txn_1776499181562",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -271,7 +307,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 2388,
       "isUtility": false,
-      "id": "txn_1776498997970"
+      "id": "txn_1776498997970",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -284,7 +321,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 12,
       "isUtility": false,
-      "id": "txn_1776498977817"
+      "id": "txn_1776498977817",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -297,7 +335,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 24,
       "isUtility": false,
-      "id": "txn_1776498785490"
+      "id": "txn_1776498785490",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -310,7 +349,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 2400,
       "isUtility": false,
-      "id": "txn_1776498580481"
+      "id": "txn_1776498580481",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -323,7 +363,8 @@
       "inventoryItemId": "inv_1776496477830",
       "inventoryQtyChange": 216,
       "isUtility": false,
-      "id": "txn_1776498565112"
+      "id": "txn_1776498565112",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "date": "2026-04-18",
@@ -336,7 +377,8 @@
       "inventoryItemId": "inv_1776496799608",
       "inventoryQtyChange": 3,
       "isUtility": false,
-      "id": "txn_1776497848261"
+      "id": "txn_1776497848261",
+      "userKey": "demo-owner@hisaabpro.test"
     }
   ],
   "inventory": [
@@ -349,7 +391,8 @@
       "salePrice": 120,
       "maxQty": 20,
       "lowThreshold": 5,
-      "id": "inv_1776496477830"
+      "id": "inv_1776496477830",
+      "userKey": "demo-owner@hisaabpro.test"
     },
     {
       "name": "Rice",
@@ -360,7 +403,20 @@
       "salePrice": 220,
       "maxQty": 20,
       "lowThreshold": 5,
-      "id": "inv_1776496799608"
+      "id": "inv_1776496799608",
+      "userKey": "demo-owner@hisaabpro.test"
+    },
+    {
+      "name": "Basmati Rice",
+      "category": "Grocery",
+      "qty": 29,
+      "unit": "kg",
+      "costPrice": 1200,
+      "salePrice": 1500,
+      "maxQty": 3,
+      "lowThreshold": 25,
+      "userKey": "ahmedkhan@gmail.com",
+      "id": "inv_1776530622269"
     }
   ]
 }

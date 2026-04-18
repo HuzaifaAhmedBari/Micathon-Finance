@@ -2,6 +2,33 @@
    log.css — Log Entry Page Styles
    =========================== */
 
+@media (max-width: 640px) {
+  .amount-display {
+    padding: 22px 16px 16px;
+  }
+
+  .amount-value {
+    font-size: 40px;
+  }
+
+  .numpad {
+    gap: 8px;
+  }
+
+  .numpad-key {
+    padding: 14px 8px;
+    font-size: 18px;
+  }
+
+  .qty-row.visible {
+    flex-direction: column;
+  }
+
+  .item-picker-trigger {
+    padding: 10px 12px;
+  }
+}
+
 .numpad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

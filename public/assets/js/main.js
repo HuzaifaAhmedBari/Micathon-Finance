@@ -2,6 +2,117 @@
 // HisaabPro — Shared App Logic
 // =========================================
 
+const HP_ACCOUNT_KEY = 'hisaabpro.account.v1';
+const HP_SESSION_KEY = 'hisaabpro.session.v1';
+function safeJsonParse(value, fallback) {
+  try {
+    return value ? JSON.parse(value) : fallback;
+  } catch (error) {
+    return fallback;
+  }
+}
+
+function readAccount() {
+  return safeJsonParse(localStorage.getItem(HP_ACCOUNT_KEY), {});
+}
+
+function writeAccount(account) {
+  const merged = { ...readAccount(), ...account };
+  localStorage.setItem(HP_ACCOUNT_KEY, JSON.stringify(merged));
+  return merged;
+}
+
+function readPreferences() {
+  return safeJsonParse(localStorage.getItem('hisaabpro.preferences.v1'), {});
+}
+
+function writePreferences(preferences) {
+  const merged = { ...readPreferences(), ...preferences };
+  localStorage.setItem('hisaabpro.preferences.v1', JSON.stringify(merged));
+  return merged;
+}
+
+function setSession(account) {
+  localStorage.setItem(HP_SESSION_KEY, JSON.stringify({
+    email: account.email,
+    loggedInAt: new Date().toISOString(),
+  }));
+}
+
+function clearSession() {
+  localStorage.removeItem(HP_SESSION_KEY);
+}
+
+function getDisplayName(account) {
+  return [account.firstName, account.lastName].filter(Boolean).join(' ').trim() || account.storeName || '';
+}
+
+function getInitials(account) {
+  const firstInitial = account.firstName ? account.firstName[0] : '';
+  const lastInitial = account.lastName ? account.lastName[0] : '';
+  if (firstInitial || lastInitial) return `${firstInitial}${lastInitial}`.toUpperCase();
+  return (account.storeName || '').slice(0, 2).toUpperCase();
+}
+
+function syncAccountChrome() {
+  const account = readAccount();
+  const name = getDisplayName(account);
+  const role = account.role || '';
+  const initials = getInitials(account);
+
+  document.querySelectorAll('.sidebar-user .user-name').forEach(el => {
+    el.textContent = name;
+  });
+  document.querySelectorAll('.sidebar-user .user-role').forEach(el => {
+    el.textContent = role;
+  });
+  document.querySelectorAll('.sidebar-user .user-avatar').forEach(el => {
+    el.textContent = initials;
+  });
+
+  document.querySelectorAll('.profile-name').forEach(el => {
+    el.textContent = name;
+  });
+  document.querySelectorAll('.profile-email').forEach(el => {
+    el.textContent = account.email || '';
+  });
+  document.querySelectorAll('.profile-avatar-large').forEach(el => {
+    el.textContent = initials;
+  });
+
+  const memberSince = document.getElementById('profileMemberSince');
+  if (memberSince) {
+    memberSince.textContent = account.memberSince || '—';
+  }
+
+  const totalEntries = document.getElementById('profileTotalEntries');
+  if (totalEntries) {
+    totalEntries.textContent = account.totalEntries != null ? String(account.totalEntries) : '—';
+  }
+
+  const streak = document.getElementById('profileStreak');
+  if (streak) {
+    streak.textContent = account.streak != null ? `🔥 ${account.streak} days` : '—';
+  }
+
+  const forecastAccuracy = document.getElementById('profileForecastAccuracy');
+  if (forecastAccuracy) {
+    forecastAccuracy.textContent = account.forecastAccuracy != null ? `${account.forecastAccuracy}%` : '—';
+  }
+}
+
+window.HPAccount = {
+  readAccount,
+  writeAccount,
+  readPreferences,
+  writePreferences,
+  setSession,
+  clearSession,
+  getDisplayName,
+  getInitials,
+  syncAccountChrome,
+};
+
 // ---- Sidebar Toggle (Mobile) ----
 const sidebar = document.getElementById('sidebar');
 const overlay = document.getElementById('sidebarOverlay');
@@ -53,6 +164,12 @@ function setCurrentDate() {
   }
 }
 document.addEventListener('DOMContentLoaded', setCurrentDate);
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.HPAccount) {
+    window.HPAccount.syncAccountChrome();
+  }
+});
 
 // ---- Filter Chips ----
 document.addEventListener('DOMContentLoaded', () => {

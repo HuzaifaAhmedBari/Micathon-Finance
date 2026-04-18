@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HisaabPro — Create Account</title>
-  <meta name="description" content="Create your HisaabPro account — free for kiryana store owners." />
+  <meta name="description" content="Create your HisaabPro account to start syncing your store data." />
   <link rel="stylesheet" href="assets/css/style.css" />
 </head>
 <body>
@@ -15,39 +15,26 @@
       <div class="auth-brand-icon">H</div>
       <span class="auth-brand-name">HisaabPro</span>
     </div>
-    <h1 class="auth-headline">Start knowing your numbers in 60 seconds.</h1>
-    <p class="auth-subtext">Join thousands of kiryana store owners who replaced their paper notebooks with HisaabPro. No complexity. No jargon.</p>
-    <div class="auth-stats">
-      <div>
-        <div class="auth-stat-value">Free</div>
-        <div class="auth-stat-label">Forever Plan</div>
-      </div>
-      <div>
-        <div class="auth-stat-value">30d</div>
-        <div class="auth-stat-label">AI Forecast</div>
-      </div>
-      <div>
-        <div class="auth-stat-value">100%</div>
-        <div class="auth-stat-label">Your Data</div>
-      </div>
-    </div>
+    <h1 class="auth-headline">Create your workspace account.</h1>
+    <p class="auth-subtext">Register once to enable profile sync, transactions, and forecast data.</p>
   </div>
 
   <!-- Form Panel -->
   <div class="auth-form-panel">
     <div style="max-width:400px;margin:0 auto;width:100%">
       <h1 class="auth-form-title">Create your account</h1>
-      <p class="auth-form-subtitle">Get started — it takes less than a minute</p>
+      <p class="auth-form-subtitle">Set up your account to continue</p>
+      <div id="authStatus" class="alert alert-danger" style="display:none;margin-bottom:16px"></div>
 
-      <form onsubmit="event.preventDefault(); window.location='index.html'">
+      <form id="registerForm">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" for="firstName">First name <span>*</span></label>
-            <input type="text" id="firstName" class="form-input" placeholder="Imran" required />
+            <input type="text" id="firstName" class="form-input" placeholder="First name" required />
           </div>
           <div class="form-group" style="margin-bottom:0">
             <label class="form-label" for="lastName">Last name</label>
-            <input type="text" id="lastName" class="form-input" placeholder="Bhai" />
+            <input type="text" id="lastName" class="form-input" placeholder="Last name" />
           </div>
         </div>
 
@@ -55,7 +42,7 @@
           <label class="form-label" for="storeName">Store name <span>*</span></label>
           <div class="input-group">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-            <input type="text" id="storeName" class="form-input" placeholder="Al-Rehman General Store" required />
+            <input type="text" id="storeName" class="form-input" placeholder="Store name" required />
           </div>
         </div>
 
@@ -63,7 +50,15 @@
           <label class="form-label" for="regEmail">Email address <span>*</span></label>
           <div class="input-group">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            <input type="email" id="regEmail" class="form-input" placeholder="imran@kiryana.pk" required autocomplete="email" />
+            <input type="email" id="regEmail" class="form-input" placeholder="you@example.com" required autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="contactNumber">Contact number <span>*</span></label>
+          <div class="input-group">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a2 2 0 011.9 1.37l1.2 3.59a2 2 0 01-.45 2.11l-1.68 1.68a16 16 0 006.36 6.36l1.68-1.68a2 2 0 012.11-.45l3.59 1.2A2 2 0 0121 18.72V22a2 2 0 01-2 2h-1C9.163 24 0 14.837 0 3V2a2 2 0 012-2h1z"/></svg>
+            <input type="tel" id="contactNumber" class="form-input" placeholder="+92 300 1234567" required autocomplete="tel" />
           </div>
         </div>
 
@@ -79,9 +74,17 @@
           <div class="form-hint">At least 8 characters with a number or symbol</div>
         </div>
 
+        <div class="form-group">
+          <label class="form-label" for="confirmPassword">Confirm password <span>*</span></label>
+          <div class="input-group">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <input type="password" id="confirmPassword" class="form-input" placeholder="Re-enter password" required />
+          </div>
+        </div>
+
         <div style="margin-bottom:20px">
           <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text-secondary);cursor:pointer;line-height:1.5">
-            <input type="checkbox" required style="accent-color:var(--emerald);width:15px;height:15px;margin-top:2px;flex-shrink:0" />
+            <input type="checkbox" id="termsAgree" required style="accent-color:var(--emerald);width:15px;height:15px;margin-top:2px;flex-shrink:0" />
             I agree to HisaabPro's <a href="#" style="color:var(--emerald);font-weight:600">Terms of Service</a> and <a href="#" style="color:var(--emerald);font-weight:600">Privacy Policy</a>.
           </label>
         </div>
@@ -97,5 +100,8 @@
 </div>
 
 <script src="assets/js/main.js"></script>
+<script src="/supabase-config.js?v=20260418"></script>
+<script src="assets/js/supabase-client.js?v=20260418"></script>
+<script src="assets/js/auth.js?v=20260418"></script>
 </body>
 </html>

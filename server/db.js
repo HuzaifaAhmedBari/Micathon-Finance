@@ -1,20 +1,38 @@
-const fs = require('fs');
-const path = require('path');
+// Local API runtime cache only (no data.json reads/writes).
+const memoryData = {
+  transactions: [],
+  inventory: [],
+};
 
-const DATA_FILE = path.join(__dirname, 'data.json');
+// Backfill missing user keys for legacy/demo rows in memory only.
+if (Array.isArray(memoryData.transactions)) {
+  memoryData.transactions = memoryData.transactions.map(txn => {
+    if (txn && !txn.userKey) {
+      return { ...txn, userKey: 'demo-owner@hisaabpro.test' };
+    }
+    return txn;
+  });
+}
 
-// Initialize empty DB if not present
-if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({ transactions: [], inventory: [] }));
+if (Array.isArray(memoryData.inventory)) {
+  memoryData.inventory = memoryData.inventory.map(item => {
+    if (item && !item.userKey) {
+      return { ...item, userKey: 'demo-owner@hisaabpro.test' };
+    }
+    return item;
+  });
 }
 
 function readData() {
-  const data = fs.readFileSync(DATA_FILE, 'utf-8');
-  return JSON.parse(data);
+  return {
+    transactions: Array.isArray(memoryData.transactions) ? [...memoryData.transactions] : [],
+    inventory: Array.isArray(memoryData.inventory) ? [...memoryData.inventory] : [],
+  };
 }
 
 function writeData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+  memoryData.transactions = Array.isArray(data.transactions) ? data.transactions : [];
+  memoryData.inventory = Array.isArray(data.inventory) ? data.inventory : [];
 }
 
 // ── Utility Presets ──────────────────────────────────────────────

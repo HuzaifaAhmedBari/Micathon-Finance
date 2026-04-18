@@ -2,15 +2,30 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+function normalizeUserKey(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
 // GET: List inventory
 router.get('/', (req, res) => {
+  const userKey = normalizeUserKey(req.query.userKey);
+  if (!userKey) {
+    return res.status(400).json({ error: 'userKey is required' });
+  }
+
   const data = db.readData();
-  res.json(data.inventory);
+  const rows = data.inventory.filter(i => normalizeUserKey(i.userKey) === userKey);
+  res.json(rows);
 });
 
 // POST: Create new item
 router.post('/', (req, res) => {
   const item = req.body;
+  const userKey = normalizeUserKey(item.userKey);
+  if (!userKey) {
+    return res.status(400).json({ error: 'userKey is required' });
+  }
+
   const data = db.readData();
   
   // Dozen multiplier logic
@@ -27,6 +42,7 @@ router.post('/', (req, res) => {
   }
 
   item.id = 'inv_' + Date.now();
+  item.userKey = userKey;
   data.inventory.push(item);
   
   db.writeData(data);
@@ -35,11 +51,16 @@ router.post('/', (req, res) => {
 
 // PUT: Update item
 router.put('/:id', (req, res) => {
+  const userKey = normalizeUserKey(req.query.userKey || req.body.userKey);
+  if (!userKey) {
+    return res.status(400).json({ error: 'userKey is required' });
+  }
+
   const data = db.readData();
-  const idx = data.inventory.findIndex(i => i.id === req.params.id);
+  const idx = data.inventory.findIndex(i => i.id === req.params.id && normalizeUserKey(i.userKey) === userKey);
   
   if (idx !== -1) {
-    data.inventory[idx] = { ...data.inventory[idx], ...req.body };
+    data.inventory[idx] = { ...data.inventory[idx], ...req.body, userKey };
     db.writeData(data);
     res.json(data.inventory[idx]);
   } else {

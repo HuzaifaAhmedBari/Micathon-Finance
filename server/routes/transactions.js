@@ -2,23 +2,53 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+function normalizeUserKey(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function normalizeStoreKey(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
 // GET: All transactions
 router.get('/', (req, res) => {
+  const userKey = normalizeUserKey(req.query.userKey);
+  const storeKey = normalizeStoreKey(req.query.storeKey);
+  if (!userKey) {
+    return res.status(400).json({ error: 'userKey is required' });
+  }
+
   const data = db.readData();
-  res.json(data.transactions);
+  const rows = data.transactions.filter(t => {
+    if (normalizeUserKey(t.userKey) !== userKey) return false;
+    if (!storeKey) return true;
+    if (!normalizeStoreKey(t.storeKey)) return true;
+    return normalizeStoreKey(t.storeKey) === storeKey;
+  });
+  res.json(rows);
 });
 
 // POST: Log a new transaction
 router.post('/', (req, res) => {
   const txn = req.body;
+  const userKey = normalizeUserKey(txn.userKey);
+  const storeKey = normalizeStoreKey(txn.storeKey);
+  if (!userKey) {
+    return res.status(400).json({ error: 'userKey is required' });
+  }
+
   const data = db.readData();
   
   txn.id = 'txn_' + Date.now();
+  txn.userKey = userKey;
+  txn.storeKey = storeKey || 'default-store';
   
   // Implicit Inventory Creation for Misc Expenses
   if (txn.type === 'expense' && txn.category === 'Misc' && !txn.inventoryItemId) {
     const invItem = {
       id: 'inv_' + Date.now(),
+      userKey,
+      storeKey: txn.storeKey,
       name: txn.description,
       category: 'Misc',
       qty: txn.inventoryQtyChange || 1,
@@ -37,7 +67,7 @@ router.post('/', (req, res) => {
 
   // If it's an inventory restock, update inventory qty
   if (txn.inventoryItemId && txn.inventoryQtyChange && txn.type === 'expense') {
-    const item = data.inventory.find(i => i.id === txn.inventoryItemId);
+    const item = data.inventory.find(i => i.id === txn.inventoryItemId && normalizeUserKey(i.userKey) === userKey);
     if (item) {
       item.qty = Math.max(0, item.qty + txn.inventoryQtyChange);
       
@@ -50,7 +80,7 @@ router.post('/', (req, res) => {
 
   // If it's a sale of an inventory item, decrease qty
   if (txn.inventoryItemId && txn.type === 'sale') {
-    const item = data.inventory.find(i => i.id === txn.inventoryItemId);
+    const item = data.inventory.find(i => i.id === txn.inventoryItemId && normalizeUserKey(i.userKey) === userKey);
     if (item && item.qty > 0) {
       item.qty = Math.max(0, item.qty - (txn.inventoryQtyChange || 1));
     }
@@ -62,8 +92,17 @@ router.post('/', (req, res) => {
 
 // DELETE: Remove transaction
 router.delete('/:id', (req, res) => {
+  const userKey = normalizeUserKey(req.query.userKey);
+  if (!userKey) {
+    return res.status(400).json({ error: 'userKey is required' });
+  }
+
   const data = db.readData();
-  data.transactions = data.transactions.filter(t => t.id !== req.params.id);
+  const before = data.transactions.length;
+  data.transactions = data.transactions.filter(t => !(t.id === req.params.id && normalizeUserKey(t.userKey) === userKey));
+  if (before === data.transactions.length) {
+    return res.status(404).json({ error: 'Transaction not found' });
+  }
   db.writeData(data);
   res.status(204).end();
 });

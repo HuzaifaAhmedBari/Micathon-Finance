@@ -22,8 +22,9 @@
       <a href="log.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>Log Entry</a>
       <span class="nav-section-label" style="margin-top:8px">Account</span>
       <a href="profile.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>Profile</a>
+      <a href="payment.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m8-7v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Subscription</a>
     </nav>
-    <div class="sidebar-footer"><a href="profile.html" class="sidebar-user"><div class="user-avatar">IB</div><div class="user-info"><div class="user-name">Imran Bhai</div><div class="user-role">Store Owner</div></div></a></div>
+    <div class="sidebar-footer"><a href="profile.html" class="sidebar-user"><div class="user-avatar" data-placeholder>—</div><div class="user-info"><div class="user-name" data-placeholder></div><div class="user-role" data-placeholder></div></div></a></div>
   </aside>
 
   <div class="main-content">
@@ -53,7 +54,7 @@
         <div class="kpi-card" style="background:var(--lime-light);border-color:#d9f99d">
           <div class="kpi-label">Predicted Revenue (7d)</div>
           <div class="kpi-value lime">—</div>
-          <div class="kpi-change" style="color:var(--lime);margin-top:4px">PKR · Forecast mid-point</div>
+          <div class="kpi-change" id="forecastTrendCaption" style="color:var(--lime);margin-top:4px">PKR · Forecast mid-point</div>
         </div>
         <div class="kpi-card" style="background:var(--emerald-light);border-color:var(--emerald-border)">
           <div class="kpi-label">Best Case (Upper)</div>
@@ -107,13 +108,13 @@
               <div class="insight-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
               </div>
-              <div><div class="insight-text">Busiest day: <strong>Friday</strong> — 91% relative sales vs weekly avg</div><div class="insight-meta">Plan stock restocking by Thursday evening</div></div>
+              <div><div class="insight-text" id="forecastInsightPrimary">Busiest day: <strong>Friday</strong> — 91% relative sales vs weekly avg</div><div class="insight-meta" id="forecastInsightPrimaryMeta">Plan stock restocking by Thursday evening</div></div>
             </div>
             <div class="insight-card warning">
               <div class="insight-icon warning">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
               </div>
-              <div><div class="insight-text">Predicted revenue dip around <strong>Apr 28</strong> — consider light restocking.</div><div class="insight-meta">Based on seasonal pattern analysis</div></div>
+              <div><div class="insight-text" id="forecastInsightSecondary">Predicted revenue dip around <strong>Apr 28</strong> — consider light restocking.</div><div class="insight-meta" id="forecastInsightSecondaryMeta">Based on seasonal pattern analysis</div></div>
             </div>
           </div>
 
@@ -137,10 +138,8 @@
         <div class="table-wrapper">
           <table>
             <thead><tr><th>Month</th><th style="text-align:right">Actual Revenue</th><th style="text-align:right">Forecasted</th><th style="text-align:right">Variance</th><th>Trend</th></tr></thead>
-            <tbody>
-              <tr><td><strong>March 2026</strong></td><td class="td-mono" style="text-align:right">1,68,400</td><td class="td-mono text-muted" style="text-align:right">1,62,000</td><td class="td-mono td-emerald" style="text-align:right">+6,400</td><td><span class="badge badge-good">Above Forecast</span></td></tr>
-              <tr><td><strong>February 2026</strong></td><td class="td-mono" style="text-align:right">1,54,200</td><td class="td-mono text-muted" style="text-align:right">1,59,000</td><td class="td-mono td-coral" style="text-align:right">-4,800</td><td><span class="badge badge-low">Below Forecast</span></td></tr>
-              <tr><td><strong>April 2026</strong> <span class="chip chip-lime" style="font-size:10px;margin-left:4px">Current</span></td><td class="td-mono" style="text-align:right">72,100</td><td class="td-mono text-muted" style="text-align:right">1,80,000</td><td class="td-muted" style="text-align:right">Pending</td><td><span class="badge badge-medium">In Progress</span></td></tr>
+            <tbody id="forecastMonthlyBreakdownBody">
+              <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Loading monthly breakdown…</td></tr>
             </tbody>
           </table>
         </div>
@@ -158,6 +157,8 @@
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/supabase-config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
 <script src="assets/js/main.js"></script>
 <script src="assets/js/charts.js"></script>
 <!-- ↓ forecast.js must load AFTER charts.js since it calls renderForecastChart() -->
