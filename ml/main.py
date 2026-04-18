@@ -19,10 +19,10 @@ app = FastAPI(
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 # Allow your Netlify frontend to call this API
+# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
-    app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # or replace * with your frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
