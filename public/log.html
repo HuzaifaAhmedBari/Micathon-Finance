@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HisaabPro — Log Entry</title>
+  <meta name="description" content="Log your kiryana store sales (Bikri) and expenses (Kharcha) in seconds." />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/log.css" />
+  <style>
+    /* ── Item Picker Dropdown ───────────────────────────── */
+    .item-picker-wrapper { position: relative; }
+    .item-picker-trigger {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; padding: 11px 14px;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius-md); cursor: pointer;
+      font-size: 14px; color: var(--text-primary);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .item-picker-trigger:hover { border-color: var(--emerald); }
+    .item-picker-trigger.open { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(5,150,105,0.12); }
+    .item-picker-trigger svg { flex-shrink: 0; color: var(--text-muted); transition: transform 0.2s; }
+    .item-picker-trigger.open svg { transform: rotate(180deg); }
+    .item-picker-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-picker-label.placeholder { color: var(--text-muted); }
+
+    .item-picker-dropdown {
+      display: none; position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--surface); border: 1.5px solid var(--border);
+      border-radius: var(--radius-md); z-index: 200;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1); overflow: hidden;
+    }
+    .item-picker-dropdown.open { display: block; }
+    .picker-search {
+      padding: 10px 12px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .picker-search svg { color: var(--text-muted); flex-shrink: 0; }
+    .picker-search input {
+      flex: 1; border: none; outline: none; background: transparent;
+      font-size: 13px; color: var(--text-primary);
+    }
+    .picker-list { max-height: 260px; overflow-y: auto; padding: 6px 0; }
+    .picker-section-label {
+      padding: 4px 12px 2px; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted);
+    }
+    .picker-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 14px; cursor: pointer; gap: 10px;
+      font-size: 13.5px; color: var(--text-primary); transition: background 0.15s;
+    }
+    .picker-item:hover { background: var(--canvas); }
+    .picker-item.selected { background: var(--emerald-light); color: var(--emerald); font-weight: 600; }
+    .picker-item-name { flex: 1; }
+    .picker-item-badge {
+      font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 600;
+      flex-shrink: 0;
+    }
+    .picker-item-badge.sale    { background: var(--emerald-light); color: var(--emerald); }
+    .picker-item-badge.expense { background: var(--coral-light);   color: var(--coral);   }
+    .picker-item-badge.restock { background: #eff6ff; color: #3b82f6; }
+
+    /* ── Qty field (visible for restock) ────────────────── */
+    .qty-row { display: none; gap: 12px; }
+    .qty-row.visible { display: flex; }
+    .qty-field { flex: 1; }
+
+    /* ── Toast notification ─────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: #0f172a; color: #fff; padding: 12px 22px;
+      border-radius: 30px; font-size: 14px; font-weight: 500;
+      opacity: 0; pointer-events: none; z-index: 9999;
+      transition: opacity 0.3s, transform 0.3s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.success svg { color: #34d399; }
+    #toast.error svg { color: #f87171; }
+  </style>
+</head>
+
+<body>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">H</div><span class="logo-text">HisaabPro</span>
+      </div>
+      <nav class="sidebar-nav">
+        <span class="nav-section-label">Main</span>
+        <a href="index.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h8m-8 6h16" />
+          </svg>Dashboard</a>
+        <a href="transactions.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>Transaction Log</a>
+        <a href="inventory.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+          </svg>Inventory</a>
+        <a href="forecast.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>ML Forecast</a>
+        <a href="log.html" class="nav-item active"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>Log Entry</a>
+        <span class="nav-section-label" style="margin-top:8px">Account</span>
+        <a href="profile.html" class="nav-item"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke-width="2" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>Profile</a>
+      </nav>
+      <div class="sidebar-footer"><a href="profile.html" class="sidebar-user">
+          <div class="user-avatar">IB</div>
+          <div class="user-info">
+            <div class="user-name">Imran Bhai</div>
+            <div class="user-role">Store Owner</div>
+          </div>
+        </a></div>
+    </aside>
+
+    <div class="main-content">
+      <header class="top-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="mobile-menu-btn" id="menuBtn"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg></button>
+          <div class="header-left">
+            <div class="header-title">Log Entry</div>
+            <div class="header-subtitle">Record a Bikri (Sale) or Kharcha (Expense)</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="header-date-chip" id="currentDate"></span>
+          <a href="inventory.html" class="btn btn-primary btn-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+            Add Item
+          </a>
+          <a href="transactions.html" class="btn btn-secondary btn-sm">View All Transactions</a>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <div style="max-width:520px;margin:0 auto">
+          <!-- Type Toggle -->
+          <div class="toggle-switch">
+            <div class="toggle-btn active-emerald" data-type="sale" id="saleBtn">
+              + Bikri (Sale)
+            </div>
+            <div class="toggle-btn" data-type="expense" id="expenseBtn">
+              − Kharcha (Expense)
+            </div>
+          </div>
+
+          <!-- Amount Display -->
+          <div class="amount-display">
+            <div class="amount-label">Enter Amount</div>
+            <div class="amount-value" id="amountDisplay">PKR 0</div>
+          </div>
+
+          <!-- Numpad -->
+          <div class="numpad">
+            <button class="numpad-key" data-val="1">1</button>
+            <button class="numpad-key" data-val="2">2</button>
+            <button class="numpad-key" data-val="3">3</button>
+            <button class="numpad-key" data-val="4">4</button>
+            <button class="numpad-key" data-val="5">5</button>
+            <button class="numpad-key" data-val="6">6</button>
+            <button class="numpad-key" data-val="7">7</button>
+            <button class="numpad-key" data-val="8">8</button>
+            <button class="numpad-key" data-val="9">9</button>
+            <button class="numpad-key" data-val=".">.</button>
+            <button class="numpad-key key-zero" data-val="0">0</button>
+            <button class="numpad-key key-back" data-val="back">⌫</button>
+          </div>
+
+          <div style="margin-top:24px">
+
+            <!-- ── Smart Item Picker ── -->
+            <div class="form-group">
+              <label class="form-label">Item / Description</label>
+              <div class="item-picker-wrapper" id="pickerWrapper">
+                <div class="item-picker-trigger" id="pickerTrigger" tabindex="0" role="button" aria-haspopup="listbox">
+                  <span class="item-picker-label placeholder" id="pickerLabel">Select an item or utility...</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <div class="item-picker-dropdown" id="pickerDropdown" role="listbox">
+                  <div class="picker-search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" id="pickerSearch" placeholder="Search items..." autocomplete="off" />
+                  </div>
+                  <div class="picker-list" id="pickerList"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quantity row (for restock) -->
+            <div class="qty-row form-group" id="qtyRow">
+              <div class="qty-field">
+                <label class="form-label" for="qtyInput" id="qtyInputLabel">Quantity Restocked</label>
+                <input type="number" id="qtyInput" class="form-input" min="0" placeholder="e.g. 10" />
+              </div>
+              <div class="qty-field">
+                <label class="form-label" id="qtyUnitLabel">Unit</label>
+                <input type="text" id="qtyUnitInput" class="form-input" readonly placeholder="unit" />
+              </div>
+            </div>
+
+            <!-- Category Chips -->
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <div class="filter-row" style="flex-wrap:wrap" id="categoryChips">
+                <span class="filter-chip active" data-group="cat">All</span>
+                <span class="filter-chip" data-group="cat">Utilities</span>
+                <span class="filter-chip" data-group="cat">Stock</span>
+                <span class="filter-chip" data-group="cat">Misc</span>
+              </div>
+            </div>
+
+            <!-- Date -->
+            <div class="form-group">
+              <label class="form-label" for="entryDate">Date</label>
+              <input type="date" id="entryDate" class="form-input" />
+            </div>
+
+            <!-- Notes (optional) -->
+            <div class="form-group">
+              <label class="form-label" for="notes">Notes <span
+                  style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+              <input type="text" id="notes" class="form-input" placeholder="Any extra detail..." />
+            </div>
+
+            <!-- Submit -->
+            <button id="submitBtn" class="btn btn-primary btn-pill-lg">
+              Save Bikri (Sale)
+            </button>
+            <div style="text-align:center;margin-top:12px">
+              <a href="index.html" style="font-size:13px;color:var(--text-muted)">Cancel — go back to Dashboard</a>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <nav class="mobile-bottom-nav">
+    <a href="index.html" class="mobile-nav-tab"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+        stroke-width="2" stroke="currentColor" width="22" height="22">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>Home</a>
+    <a href="log.html" class="mobile-nav-tab active"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="22" height="22">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+      </svg>Log<div class="mobile-nav-dot"></div></a>
+    <a href="inventory.html" class="mobile-nav-tab"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="22" height="22">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+      </svg>Inventory</a>
+    <a href="forecast.html" class="mobile-nav-tab"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="22" height="22">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4" />
+      </svg>Forecast</a>
+    <a href="profile.html" class="mobile-nav-tab"><svg xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="22" height="22">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>Profile</a>
+  </nav>
+
+  <!-- Toast -->
+  <div id="toast">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="toastIcon">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+    </svg>
+    <span id="toastMsg">Entry saved!</span>
+  </div>
+
+  <script src="assets/js/store.js"></script>
+  <script src="assets/js/main.js"></script>
+  <script src="assets/js/page-log.js"></script>
+</body>
+
+</html>
