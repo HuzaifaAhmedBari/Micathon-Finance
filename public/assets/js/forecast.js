@@ -9,16 +9,27 @@ fetch(`${ML_API}/health`).catch(() => {});
 
 // ---- Fetch sales history from Supabase ----
 async function getSalesHistory() {
-  const { data, error } = await supabase
-    .from("sales_entries")
-    .select("amount, created_at")
-    .order("created_at", { ascending: true });
+  const hasSupabase = window.supabase && window.supabase._config && window.supabase._config.url && window.supabase._config.anonKey;
+  if (hasSupabase) {
+    const { data, error } = await supabase
+      .from("sales_entries")
+      .select("amount, created_at")
+      .order("created_at", { ascending: true });
 
-  if (error) {
-    console.error("Supabase error:", error);
-    return null;
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data;
+    }
+
+    // Demo mode commonly reads with anon role; fallback to local API history.
+    if (error) {
+      console.warn("Supabase sales_entries unavailable, using local fallback:", error.message || error);
+    }
   }
-  return data;
+
+  const transactions = await HP.getTransactions();
+  return transactions
+    .filter(txn => txn.type === 'sale')
+    .map(txn => ({ amount: txn.amount, created_at: `${txn.date}T00:00:00.000Z` }));
 }
 
 // ---- Aggregate individual entries into daily totals ----

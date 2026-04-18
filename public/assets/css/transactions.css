@@ -1,5 +1,28 @@
 /* HisaabPro — Transaction Log Specific Styles */
 
+@media (max-width: 1024px) {
+  .txn-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .txn-toolbar .search-wrapper {
+    max-width: none !important;
+    width: 100%;
+  }
+
+  #typeFilterRow {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-delete {
+    padding: 4px;
+  }
+}
+
 /* Delete button */
 .btn-delete {
   background: none; border: none; cursor: pointer; padding: 4px 6px;

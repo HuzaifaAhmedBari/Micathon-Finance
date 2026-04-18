@@ -17,6 +17,34 @@ function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
+// Backfill missing user keys for legacy/demo rows
+const _data = readData();
+let _needsWrite = false;
+
+if (Array.isArray(_data.transactions)) {
+  _data.transactions = _data.transactions.map(txn => {
+    if (txn && !txn.userKey) {
+      _needsWrite = true;
+      return { ...txn, userKey: 'demo-owner@hisaabpro.test' };
+    }
+    return txn;
+  });
+}
+
+if (Array.isArray(_data.inventory)) {
+  _data.inventory = _data.inventory.map(item => {
+    if (item && !item.userKey) {
+      _needsWrite = true;
+      return { ...item, userKey: 'demo-owner@hisaabpro.test' };
+    }
+    return item;
+  });
+}
+
+if (_needsWrite) {
+  writeData(_data);
+}
+
 // ── Utility Presets ──────────────────────────────────────────────
 const UTILITY_PRESETS = [
   { id: 'util_elec',    name: 'Electricity Bill',   category: 'Utilities',  type: 'expense' },

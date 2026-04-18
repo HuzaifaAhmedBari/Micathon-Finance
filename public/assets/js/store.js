@@ -3,6 +3,13 @@
 // =========================================
 
 const HP = (() => {
+  function getUserKey() {
+    const account = window.HPAccount && typeof window.HPAccount.readAccount === 'function'
+      ? window.HPAccount.readAccount()
+      : {};
+    return String(account.email || 'demo@local').trim().toLowerCase();
+  }
+
   // ── Helper: API Request ───────────────────────────────────────────
   async function apiRequest(endpoint, method = 'GET', body = null) {
     const options = {
@@ -30,28 +37,37 @@ const HP = (() => {
 
   // ── CRUD: Transactions ────────────────────────────────────────────
   async function getTransactions() {
-    return await apiRequest('/transactions');
+    return await apiRequest(`/transactions?userKey=${encodeURIComponent(getUserKey())}`);
   }
 
   async function addTransaction(txn) {
-    return await apiRequest('/transactions', 'POST', txn);
+    return await apiRequest('/transactions', 'POST', {
+      ...txn,
+      userKey: getUserKey(),
+    });
   }
 
   async function deleteTransaction(id) {
-    return await apiRequest(`/transactions/${id}`, 'DELETE');
+    return await apiRequest(`/transactions/${id}?userKey=${encodeURIComponent(getUserKey())}`, 'DELETE');
   }
 
   // ── CRUD: Inventory ───────────────────────────────────────────────
   async function getInventory() {
-    return await apiRequest('/inventory');
+    return await apiRequest(`/inventory?userKey=${encodeURIComponent(getUserKey())}`);
   }
 
   async function addInventoryItem(item) {
-    return await apiRequest('/inventory', 'POST', item);
+    return await apiRequest('/inventory', 'POST', {
+      ...item,
+      userKey: getUserKey(),
+    });
   }
 
   async function updateInventoryItem(id, updates) {
-    return await apiRequest(`/inventory/${id}`, 'PUT', updates);
+    return await apiRequest(`/inventory/${id}?userKey=${encodeURIComponent(getUserKey())}`, 'PUT', {
+      ...updates,
+      userKey: getUserKey(),
+    });
   }
 
   // ── Analytics helpers ─────────────────────────────────────────────

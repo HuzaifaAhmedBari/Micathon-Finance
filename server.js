@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+require('dotenv').config();
 const apiRoutes = require('./server/routes/api');
 
 const app = express();
@@ -15,6 +16,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API Routes
 app.use('/api', apiRoutes);
+
+app.get('/supabase-config.js', (req, res) => {
+  const config = {
+    url: process.env.SUPABASE_URL || '',
+    anonKey: process.env.SUPABASE_ANON_KEY || '',
+  };
+
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  res.type('application/javascript').send(`window.__SUPABASE_CONFIG__ = ${JSON.stringify(config)};`);
+});
 
 
 

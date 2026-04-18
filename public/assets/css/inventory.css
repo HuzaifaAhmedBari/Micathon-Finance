@@ -1,5 +1,45 @@
 /* HisaabPro — Inventory Page Specific Styles */
 
+@media (max-width: 1024px) {
+  .inventory-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .inventory-toolbar .search-wrapper {
+    width: 100%;
+  }
+
+  #invFilterRow {
+    width: 100%;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal {
+    padding: 20px;
+  }
+
+  .qty-editor {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .qty-editor input {
+    width: 100%;
+  }
+}
+
 /* Modal */
 .modal-backdrop {
   display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
