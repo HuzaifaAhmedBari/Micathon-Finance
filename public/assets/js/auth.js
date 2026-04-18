@@ -84,7 +84,12 @@ async function tryDemoPublicUserLogin(email, password) {
     return null;
   }
 
-  const passwordHash = await hashPasswordSha256(password);
+  let passwordHash = '';
+  try {
+    passwordHash = await hashPasswordSha256(password);
+  } catch (error) {
+    return null;
+  }
 
   const match = data.find(row => {
     if (!row || row.is_active === false) return false;
@@ -242,9 +247,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
 
+          let passwordHash = '';
+          try {
+            passwordHash = await hashPasswordSha256(password);
+          } catch (error) {
+            setAuthStatus(error.message || 'Could not securely process password.');
+            return;
+          }
+
           const payload = {
             email,
-            demo_password_hash: await hashPasswordSha256(password),
+            demo_password_hash: passwordHash,
             first_name: toTitleCase(firstName),
             last_name: toTitleCase(lastName),
             store_name: storeName.trim(),

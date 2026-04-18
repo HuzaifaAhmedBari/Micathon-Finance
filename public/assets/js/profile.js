@@ -265,7 +265,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const client = getSupabaseClient();
       const currentEmail = sanitizeEmail(currentAccount.email || '');
       if (client && currentEmail) {
-        const passwordHash = await hashPasswordSha256(newPassword);
+        let passwordHash = '';
+        try {
+          passwordHash = await hashPasswordSha256(newPassword);
+        } catch (error) {
+          setProfileStatus(error.message || 'Could not securely process password.', 'danger');
+          return;
+        }
         const result = await client
           .from('demo_public_users')
           .eq('email', currentEmail)

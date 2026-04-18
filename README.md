@@ -16,6 +16,7 @@
 - Demo credentials:
 	- `demo-owner@hisaabpro.test` / `Demo123!`
 	- `demo-manager@hisaabpro.test` / `Demo123!`
+- Demo passwords are stored as SHA-256 hashes in `demo_public_users.demo_password_hash`.
 - This mode is for demos/testing only and should not be used in production.
 
 ## User-Specific Demo Data
