@@ -252,6 +252,13 @@ for all
 using (true)
 with check (true);
 
+grant usage on schema public to anon, authenticated;
+grant select, insert, update, delete on table public.demo_public_users to anon, authenticated;
+grant select, insert, update, delete on table public.demo_transactions to anon, authenticated;
+grant select, insert, update, delete on table public.demo_inventory_items to anon, authenticated;
+grant select, insert, update, delete on table public.demo_forecast_runs to anon, authenticated;
+grant select, insert, update, delete on table public.demo_forecast_points to anon, authenticated;
+
 insert into public.demo_public_users (
   id,
   email,
