@@ -102,14 +102,15 @@ drop view if exists public.sales_entries;
 create view public.sales_entries as
 select
   id,
-  owner_id,
+  user_key,
+  store_key,
   amount,
   created_at,
   transaction_date,
   description,
   category,
   type
-from public.transactions
+from public.demo_transactions
 where type = 'sale';
 
 create or replace function public.bootstrap_user_profile()

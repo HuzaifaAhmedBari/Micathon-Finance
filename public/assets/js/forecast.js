@@ -3,12 +3,16 @@
 // =========================================
 
 const ML_API = "http://127.0.0.1:8000"; // ← swap to Render URL when deploying
+const ML_RETRY_MS = 30000;
+
+let lastForecastSource = 'ml';
+let retryIntervalId = null;
 
 // ---- Warm up Render on page load (avoids cold-start delay when user clicks) ----
 fetch(`${ML_API}/health`).catch(() => {});
 
 // ---- Fetch sales history from Supabase ----
-async function getSalesHistory() {
+async function getSalesHistorySupabase() {
   const { data, error } = await supabase
     .from("sales_entries")
     .select("amount, created_at")
@@ -18,15 +22,17 @@ async function getSalesHistory() {
     console.error("Supabase error:", error);
     return null;
   }
-  return data;
+  return (Array.isArray(data) ? data : []).map(row => ({
+    date: String(row.created_at || '').slice(0, 10),
+    amount: Number(row.amount || 0),
+  }));
 }
-*/
+
 
 // ---- Main data fetcher - switches between local and Supabase ----
 // For now, uses local backend. Uncomment Supabase version when migrating.
 async function getSalesHistory() {
-  return getSalesHistoryLocal();
-  // return getSalesHistorySupabase(); // ← Uncomment to use Supabase
+  return getSalesHistorySupabase(); // ← Uncomment to use Supabase
 }
 
 // ---- Aggregate individual entries into daily totals ----
