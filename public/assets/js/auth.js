@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
             first_name: toTitleCase(firstName),
             last_name: toTitleCase(lastName),
             store_name: storeName.trim(),
-            role: 'Store Owner',
+            role: 'Owner',
             phone: contactNumber,
             is_active: true,
           };
@@ -284,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
           email,
           password,
           memberSince: new Date().toLocaleDateString('en-PK', { month: 'short', year: 'numeric' }),
-          role: 'Store Owner',
+          role: 'Owner',
         });
 
         accountApi.setSession(account);

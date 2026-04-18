@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
       phone: row.phone || '',
       city: row.city || '',
       area: row.area || '',
-      role: row.role || 'Store Owner',
+      role: row.role || 'Owner',
       email: row.email || account.email || '',
     });
 

@@ -3,6 +3,9 @@
 // =========================================
 
 const ML_API = "http://127.0.0.1:8000"; // ← swap to Render URL when deploying
+const ML_RETRY_MS = 30000;
+let lastForecastSource = 'ml';
+let retryIntervalId = null;
 
 // ---- Warm up Render on page load (avoids cold-start delay when user clicks) ----
 fetch(`${ML_API}/health`).catch(() => {});
@@ -40,6 +43,41 @@ async function fetchForecast(history) {
     throw new Error(`ML API error: ${response.status}`);
   }
   return response.json();
+}
+
+function buildLocalFallbackForecast(history, periods = 30) {
+  const safeHistory = Array.isArray(history) ? history : [];
+  const lastDate = safeHistory.length
+    ? new Date(safeHistory[safeHistory.length - 1].date)
+    : new Date();
+
+  const last7 = safeHistory.slice(-7).map(h => Number(h.amount || 0));
+  const prev7 = safeHistory.slice(-14, -7).map(h => Number(h.amount || 0));
+
+  const avgLast7 = last7.length ? last7.reduce((a, b) => a + b, 0) / last7.length : 0;
+  const avgPrev7 = prev7.length ? prev7.reduce((a, b) => a + b, 0) / prev7.length : avgLast7;
+  const slope = avgPrev7 > 0 ? (avgLast7 - avgPrev7) / avgPrev7 : 0;
+
+  const result = [];
+  for (let i = 1; i <= periods; i += 1) {
+    const d = new Date(lastDate);
+    d.setDate(lastDate.getDate() + i);
+    const dateKey = d.toISOString().slice(0, 10);
+
+    const trendFactor = 1 + (slope * (i / Math.max(1, periods / 2)));
+    const yhat = Math.max(0, Math.round(avgLast7 * trendFactor));
+    const yhatLower = Math.max(0, Math.round(yhat * 0.85));
+    const yhatUpper = Math.max(0, Math.round(yhat * 1.15));
+
+    result.push({
+      ds: dateKey,
+      yhat,
+      yhat_lower: yhatLower,
+      yhat_upper: yhatUpper,
+    });
+  }
+
+  return result;
 }
 
 // ---- Update the 3 KPI cards with real forecast data ----
@@ -121,10 +159,88 @@ function updateTrendSummaries(dailyHistory, forecastData) {
   }
 }
 
+function updateMonthlyBreakdown(dailyHistory, forecastData) {
+  const body = document.getElementById('forecastMonthlyBreakdownBody');
+  if (!body) return;
+
+  const monthKey = date => {
+    const d = new Date(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  };
+
+  const monthLabel = key => {
+    const [y, m] = key.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, 1).toLocaleDateString('en-PK', { month: 'long', year: 'numeric' });
+  };
+
+  const actualMap = new Map();
+  dailyHistory.forEach(row => {
+    const key = monthKey(row.date);
+    actualMap.set(key, (actualMap.get(key) || 0) + Number(row.amount || 0));
+  });
+
+  const forecastMap = new Map();
+  forecastData.forEach(row => {
+    const key = monthKey(row.ds);
+    forecastMap.set(key, (forecastMap.get(key) || 0) + Number(row.yhat || 0));
+  });
+
+  const allMonths = [...new Set([...actualMap.keys(), ...forecastMap.keys()])]
+    .sort((a, b) => b.localeCompare(a))
+    .slice(0, 3);
+
+  if (!allMonths.length) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">No monthly data available.</td></tr>';
+    return;
+  }
+
+  const now = new Date();
+  const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  body.innerHTML = allMonths.map(key => {
+    const actual = Math.round(actualMap.get(key) || 0);
+    const forecast = Math.round(forecastMap.get(key) || 0);
+    const variance = actual - forecast;
+    const varianceText = forecast > 0
+      ? `${variance >= 0 ? '+' : ''}${Math.abs(variance).toLocaleString('en-PK')}`
+      : 'N/A';
+
+    let trendBadge = '<span class="badge badge-medium">In Progress</span>';
+    if (forecast > 0) {
+      trendBadge = variance >= 0
+        ? '<span class="badge badge-good">Above Forecast</span>'
+        : '<span class="badge badge-low">Below Forecast</span>';
+    }
+
+    const varianceClass = forecast > 0
+      ? (variance >= 0 ? 'td-emerald' : 'td-coral')
+      : 'td-muted';
+
+    const currentChip = key === currentKey
+      ? ' <span class="chip chip-lime" style="font-size:10px;margin-left:4px">Current</span>'
+      : '';
+
+    return `<tr>
+      <td><strong>${monthLabel(key)}</strong>${currentChip}</td>
+      <td class="td-mono" style="text-align:right">${actual.toLocaleString('en-PK')}</td>
+      <td class="td-mono text-muted" style="text-align:right">${forecast > 0 ? forecast.toLocaleString('en-PK') : '—'}</td>
+      <td class="td-mono ${varianceClass}" style="text-align:right">${varianceText}</td>
+      <td>${trendBadge}</td>
+    </tr>`;
+  }).join('');
+}
+
 // ---- Update Model Notes card with real history count ----
-function updateModelNotes(historyLength, usingProphet) {
+function updateModelNotes(historyLength, usingProphet, source = 'ml') {
   const notesEl = document.getElementById("model-notes-text");
   if (!notesEl) return;
+
+  if (source === 'local-fallback') {
+    notesEl.innerHTML = `ML service is unavailable, so a <strong>local estimate</strong> is shown using recent sales trend from <strong>${historyLength} days</strong>.`;
+    return;
+  }
 
   if (usingProphet) {
     notesEl.innerHTML = `Based on <strong>${historyLength} historical data points</strong>. Handles weekly &amp; monthly seasonality. Model accuracy improves with more entries.`;
@@ -134,9 +250,15 @@ function updateModelNotes(historyLength, usingProphet) {
 }
 
 // ---- Update the header subtitle with real MAPE (placeholder until you compute it) ----
-function updateHeaderStatus(usingProphet) {
+function updateHeaderStatus(usingProphet, source = 'ml') {
   const subtitle = document.querySelector(".header-subtitle");
   if (!subtitle) return;
+
+  if (source === 'local-fallback') {
+    subtitle.textContent = 'Local fallback forecast · ML server offline';
+    return;
+  }
+
   subtitle.textContent = usingProphet
     ? "Powered by Facebook Prophet · Live ML forecast"
     : "Powered by Facebook Prophet · Average estimate (needs more data)";
@@ -232,8 +354,17 @@ async function loadForecast() {
     const dailyHistory = aggregateByDay(entries);
     const usingProphet = dailyHistory.length >= 14;
 
-    // 3. Call the ML API
-    const forecastData = await fetchForecast(dailyHistory);
+    // 3. Call the ML API with graceful local fallback
+    let forecastData = [];
+    let forecastSource = 'ml';
+    try {
+      forecastData = await fetchForecast(dailyHistory);
+    } catch (mlError) {
+      console.warn('ML API unavailable, using local fallback forecast:', mlError);
+      forecastData = buildLocalFallbackForecast(dailyHistory, 30);
+      forecastSource = 'local-fallback';
+      showError('ML server is offline. Showing local fallback forecast.');
+    }
 
     // 4. Build historical data arrays for the chart
     // We pass the last 60 days of actuals (or all if fewer)
@@ -264,13 +395,19 @@ async function loadForecast() {
     // 7. Update KPI cards and metadata
     updateKPICards(forecastData);
     updateTrendSummaries(dailyHistory, forecastData);
-    updateModelNotes(dailyHistory.length, usingProphet);
-    updateHeaderStatus(usingProphet);
+    updateMonthlyBreakdown(dailyHistory, forecastData);
+    if (typeof renderSeasonalityChart === 'function') {
+      renderSeasonalityChart(dailyHistory);
+    }
+    updateModelNotes(dailyHistory.length, usingProphet, forecastSource);
+    updateHeaderStatus(usingProphet, forecastSource);
     await persistForecastRun(dailyHistory, forecastData);
+    lastForecastSource = forecastSource;
 
   } catch (err) {
     console.error("Forecast error:", err);
     showError("Could not load forecast. Make sure the ML server is running.");
+    lastForecastSource = 'local-fallback';
   } finally {
     setLoadingState(false);
   }
@@ -282,4 +419,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const btn = document.getElementById("rerun-btn");
   if (btn) btn.addEventListener("click", loadForecast);
+
+  if (!retryIntervalId) {
+    retryIntervalId = window.setInterval(() => {
+      if (lastForecastSource === 'local-fallback') {
+        loadForecast();
+      }
+    }, ML_RETRY_MS);
+  }
 });
