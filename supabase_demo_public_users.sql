@@ -133,6 +133,125 @@ for update
 using (true)
 with check (true);
 
+create table if not exists public.demo_transactions (
+  id text primary key,
+  user_key text not null,
+  store_key text not null default 'default-store',
+  transaction_date date not null,
+  description text not null,
+  category text not null,
+  type text not null check (type in ('sale', 'expense')),
+  amount numeric(14,2) not null check (amount >= 0),
+  unit text not null default 'pcs',
+  notes text,
+  inventory_item_id text,
+  inventory_qty_change numeric(14,2),
+  is_utility boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists demo_transactions_user_store_date_idx
+  on public.demo_transactions (user_key, store_key, transaction_date desc);
+
+create table if not exists public.demo_inventory_items (
+  id text primary key,
+  user_key text not null,
+  store_key text not null default 'default-store',
+  name text not null,
+  category text not null,
+  qty numeric(14,2) not null default 0,
+  unit text not null default 'pcs',
+  cost_price numeric(14,2) not null default 0,
+  sale_price numeric(14,2) not null default 0,
+  max_qty numeric(14,2) not null default 20,
+  low_threshold numeric(14,2) not null default 5,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists demo_inventory_items_user_store_idx
+  on public.demo_inventory_items (user_key, store_key);
+
+create table if not exists public.demo_forecast_runs (
+  id uuid primary key default gen_random_uuid(),
+  user_key text not null,
+  store_key text not null default 'default-store',
+  periods integer not null default 30,
+  history_days integer not null default 0,
+  trend_pct integer,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists demo_forecast_runs_user_store_created_idx
+  on public.demo_forecast_runs (user_key, store_key, created_at desc);
+
+create table if not exists public.demo_forecast_points (
+  id uuid primary key default gen_random_uuid(),
+  run_id uuid not null references public.demo_forecast_runs(id) on delete cascade,
+  ds date not null,
+  yhat numeric(14,2) not null,
+  yhat_lower numeric(14,2),
+  yhat_upper numeric(14,2),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists demo_forecast_points_run_idx
+  on public.demo_forecast_points (run_id, ds);
+
+create or replace function public.touch_demo_row_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists touch_demo_transactions_updated_at on public.demo_transactions;
+create trigger touch_demo_transactions_updated_at
+before update on public.demo_transactions
+for each row execute procedure public.touch_demo_row_updated_at();
+
+drop trigger if exists touch_demo_inventory_items_updated_at on public.demo_inventory_items;
+create trigger touch_demo_inventory_items_updated_at
+before update on public.demo_inventory_items
+for each row execute procedure public.touch_demo_row_updated_at();
+
+alter table public.demo_transactions enable row level security;
+alter table public.demo_inventory_items enable row level security;
+alter table public.demo_forecast_runs enable row level security;
+alter table public.demo_forecast_points enable row level security;
+
+drop policy if exists "demo_transactions anon all" on public.demo_transactions;
+create policy "demo_transactions anon all"
+on public.demo_transactions
+for all
+using (true)
+with check (true);
+
+drop policy if exists "demo_inventory_items anon all" on public.demo_inventory_items;
+create policy "demo_inventory_items anon all"
+on public.demo_inventory_items
+for all
+using (true)
+with check (true);
+
+drop policy if exists "demo_forecast_runs anon all" on public.demo_forecast_runs;
+create policy "demo_forecast_runs anon all"
+on public.demo_forecast_runs
+for all
+using (true)
+with check (true);
+
+drop policy if exists "demo_forecast_points anon all" on public.demo_forecast_points;
+create policy "demo_forecast_points anon all"
+on public.demo_forecast_points
+for all
+using (true)
+with check (true);
+
 insert into public.demo_public_users (
   id,
   email,

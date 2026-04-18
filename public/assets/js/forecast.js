@@ -7,26 +7,9 @@ const ML_API = "http://127.0.0.1:8000"; // ← swap to Render URL when deploying
 // ---- Warm up Render on page load (avoids cold-start delay when user clicks) ----
 fetch(`${ML_API}/health`).catch(() => {});
 
-// ---- Fetch sales history from Supabase ----
+// ---- Fetch sales history (user + store scoped) ----
 async function getSalesHistory() {
-  const hasSupabase = window.supabase && window.supabase._config && window.supabase._config.url && window.supabase._config.anonKey;
-  if (hasSupabase) {
-    const { data, error } = await supabase
-      .from("sales_entries")
-      .select("amount, created_at")
-      .order("created_at", { ascending: true });
-
-    if (!error && Array.isArray(data) && data.length > 0) {
-      return data;
-    }
-
-    // Demo mode commonly reads with anon role; fallback to local API history.
-    if (error) {
-      console.warn("Supabase sales_entries unavailable, using local fallback:", error.message || error);
-    }
-  }
-
-  const transactions = await HP.getTransactions();
+  const transactions = await HP.getTransactions({ storeScoped: true });
   return transactions
     .filter(txn => txn.type === 'sale')
     .map(txn => ({ amount: txn.amount, created_at: `${txn.date}T00:00:00.000Z` }));
@@ -181,6 +164,55 @@ function hideStatus() {
   if (el) el.style.display = "none";
 }
 
+function getSupabaseClient() {
+  if (!window.supabase) return null;
+  const config = window.supabase._config || {};
+  if (!config.url || !config.anonKey) return null;
+  return window.supabase;
+}
+
+async function persistForecastRun(dailyHistory, forecastData) {
+  const client = getSupabaseClient();
+  if (!client || !window.HP) return;
+
+  const userKey = typeof window.HP.getUserKey === 'function' ? window.HP.getUserKey() : '';
+  const storeKey = typeof window.HP.getStoreKey === 'function' ? window.HP.getStoreKey() : 'default-store';
+  if (!userKey) return;
+
+  const recentActual = dailyHistory.slice(-7).reduce((sum, row) => sum + row.amount, 0);
+  const forecastNext7 = forecastData.slice(0, 7).reduce((sum, row) => sum + row.yhat, 0);
+  const baseline = recentActual > 0 ? recentActual : 1;
+  const trendPct = Math.round(((forecastNext7 - recentActual) / baseline) * 100);
+
+  const runInsert = await client.from('demo_forecast_runs').insert({
+    user_key: userKey,
+    store_key: storeKey,
+    periods: forecastData.length,
+    history_days: dailyHistory.length,
+    trend_pct: trendPct,
+  });
+
+  if (runInsert.error || !Array.isArray(runInsert.data) || !runInsert.data.length) {
+    return;
+  }
+
+  const runId = runInsert.data[0].id;
+  if (!runId) return;
+
+  const pointRows = forecastData.map(point => ({
+    run_id: runId,
+    ds: point.ds,
+    yhat: point.yhat,
+    yhat_lower: point.yhat_lower,
+    yhat_upper: point.yhat_upper,
+  }));
+
+  const pointsInsert = await client.from('demo_forecast_points').insert(pointRows);
+  if (pointsInsert.error) {
+    console.warn('Could not persist forecast points:', pointsInsert.error.message || pointsInsert.error);
+  }
+}
+
 // ---- Main orchestrator ----
 async function loadForecast() {
   setLoadingState(true);
@@ -234,6 +266,7 @@ async function loadForecast() {
     updateTrendSummaries(dailyHistory, forecastData);
     updateModelNotes(dailyHistory.length, usingProphet);
     updateHeaderStatus(usingProphet);
+    await persistForecastRun(dailyHistory, forecastData);
 
   } catch (err) {
     console.error("Forecast error:", err);

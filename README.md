@@ -21,9 +21,10 @@
 
 ## User-Specific Demo Data
 
-- Transactions, expenses, inventory, and forecast source history are scoped by logged-in user email (`userKey`).
-- Each demo user sees only their own records from the local API data store.
+- Transactions and inventory now persist to Supabase demo tables (`demo_transactions`, `demo_inventory_items`) and are scoped by `user_key` + `store_key`.
+- Forecast runs and points persist to Supabase (`demo_forecast_runs`, `demo_forecast_points`) and are also user/store scoped.
 - New account creation includes contact number and saves it to `demo_public_users.phone`.
+- Re-run [supabase_demo_public_users.sql](supabase_demo_public_users.sql) after pulling new changes so demo data tables/policies are created.
 
 ## Environment
 

@@ -2,6 +2,36 @@
   "transactions": [
     {
       "date": "2026-04-18",
+      "description": "Electricity Bill",
+      "category": "Utilities",
+      "type": "expense",
+      "amount": 19999,
+      "unit": "pcs",
+      "notes": "",
+      "inventoryItemId": null,
+      "inventoryQtyChange": null,
+      "isUtility": true,
+      "userKey": "ahmedkhan@gmail.com",
+      "storeKey": "kaimkhani general store",
+      "id": "txn_1776533204473"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Basmati Rice",
+      "category": "Grocery",
+      "type": "sale",
+      "amount": 1500,
+      "unit": "kg",
+      "notes": "-1 kg",
+      "inventoryItemId": "inv_1776530622269",
+      "inventoryQtyChange": 1,
+      "isUtility": false,
+      "userKey": "ahmedkhan@gmail.com",
+      "storeKey": "kaimkhani general store",
+      "id": "txn_1776533106269"
+    },
+    {
+      "date": "2026-04-18",
       "description": "Egg",
       "category": "Stock",
       "type": "expense",
@@ -197,7 +227,7 @@
     {
       "name": "Basmati Rice",
       "category": "Grocery",
-      "qty": 30,
+      "qty": 29,
       "unit": "kg",
       "costPrice": 1200,
       "salePrice": 1500,

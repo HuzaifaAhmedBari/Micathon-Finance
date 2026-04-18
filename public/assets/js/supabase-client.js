@@ -142,6 +142,19 @@
           body: JSON.stringify(values),
         });
       },
+      async delete() {
+        const params = new URLSearchParams();
+        state.filters.forEach(filter => {
+          params.append(filter.column, `eq.${filter.value}`);
+        });
+
+        return request(`/rest/v1/${state.table}?${params.toString()}`, {
+          method: 'DELETE',
+          headers: buildHeaders({
+            Prefer: 'return=representation',
+          }),
+        });
+      },
       async execute() {
         const params = new URLSearchParams();
         params.set('select', state.columns);

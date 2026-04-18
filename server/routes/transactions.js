@@ -6,15 +6,25 @@ function normalizeUserKey(value) {
   return String(value || '').trim().toLowerCase();
 }
 
+function normalizeStoreKey(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
 // GET: All transactions
 router.get('/', (req, res) => {
   const userKey = normalizeUserKey(req.query.userKey);
+  const storeKey = normalizeStoreKey(req.query.storeKey);
   if (!userKey) {
     return res.status(400).json({ error: 'userKey is required' });
   }
 
   const data = db.readData();
-  const rows = data.transactions.filter(t => normalizeUserKey(t.userKey) === userKey);
+  const rows = data.transactions.filter(t => {
+    if (normalizeUserKey(t.userKey) !== userKey) return false;
+    if (!storeKey) return true;
+    if (!normalizeStoreKey(t.storeKey)) return true;
+    return normalizeStoreKey(t.storeKey) === storeKey;
+  });
   res.json(rows);
 });
 
@@ -22,6 +32,7 @@ router.get('/', (req, res) => {
 router.post('/', (req, res) => {
   const txn = req.body;
   const userKey = normalizeUserKey(txn.userKey);
+  const storeKey = normalizeStoreKey(txn.storeKey);
   if (!userKey) {
     return res.status(400).json({ error: 'userKey is required' });
   }
@@ -30,12 +41,14 @@ router.post('/', (req, res) => {
   
   txn.id = 'txn_' + Date.now();
   txn.userKey = userKey;
+  txn.storeKey = storeKey || 'default-store';
   
   // Implicit Inventory Creation for Misc Expenses
   if (txn.type === 'expense' && txn.category === 'Misc' && !txn.inventoryItemId) {
     const invItem = {
       id: 'inv_' + Date.now(),
       userKey,
+      storeKey: txn.storeKey,
       name: txn.description,
       category: 'Misc',
       qty: txn.inventoryQtyChange || 1,

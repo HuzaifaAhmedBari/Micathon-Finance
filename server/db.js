@@ -3,46 +3,55 @@ const path = require('path');
 
 const DATA_FILE = path.join(__dirname, 'data.json');
 
-// Initialize empty DB if not present
-if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({ transactions: [], inventory: [] }));
+function safeLoadInitialData() {
+  if (!fs.existsSync(DATA_FILE)) {
+    return { transactions: [], inventory: [] };
+  }
+
+  try {
+    const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+    const parsed = JSON.parse(raw);
+    return {
+      transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
+      inventory: Array.isArray(parsed.inventory) ? parsed.inventory : [],
+    };
+  } catch (_err) {
+    return { transactions: [], inventory: [] };
+  }
 }
 
-function readData() {
-  const data = fs.readFileSync(DATA_FILE, 'utf-8');
-  return JSON.parse(data);
-}
+// In-memory DB: no writes are persisted to data.json.
+const memoryData = safeLoadInitialData();
 
-function writeData(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
-}
-
-// Backfill missing user keys for legacy/demo rows
-const _data = readData();
-let _needsWrite = false;
-
-if (Array.isArray(_data.transactions)) {
-  _data.transactions = _data.transactions.map(txn => {
+// Backfill missing user keys for legacy/demo rows in memory only.
+if (Array.isArray(memoryData.transactions)) {
+  memoryData.transactions = memoryData.transactions.map(txn => {
     if (txn && !txn.userKey) {
-      _needsWrite = true;
       return { ...txn, userKey: 'demo-owner@hisaabpro.test' };
     }
     return txn;
   });
 }
 
-if (Array.isArray(_data.inventory)) {
-  _data.inventory = _data.inventory.map(item => {
+if (Array.isArray(memoryData.inventory)) {
+  memoryData.inventory = memoryData.inventory.map(item => {
     if (item && !item.userKey) {
-      _needsWrite = true;
       return { ...item, userKey: 'demo-owner@hisaabpro.test' };
     }
     return item;
   });
 }
 
-if (_needsWrite) {
-  writeData(_data);
+function readData() {
+  return {
+    transactions: Array.isArray(memoryData.transactions) ? [...memoryData.transactions] : [],
+    inventory: Array.isArray(memoryData.inventory) ? [...memoryData.inventory] : [],
+  };
+}
+
+function writeData(data) {
+  memoryData.transactions = Array.isArray(data.transactions) ? data.transactions : [];
+  memoryData.inventory = Array.isArray(data.inventory) ? data.inventory : [];
 }
 
 // ── Utility Presets ──────────────────────────────────────────────
