@@ -1,27 +1,8 @@
-const fs = require('fs');
-const path = require('path');
-
-const DATA_FILE = path.join(__dirname, 'data.json');
-
-function safeLoadInitialData() {
-  if (!fs.existsSync(DATA_FILE)) {
-    return { transactions: [], inventory: [] };
-  }
-
-  try {
-    const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-    const parsed = JSON.parse(raw);
-    return {
-      transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
-      inventory: Array.isArray(parsed.inventory) ? parsed.inventory : [],
-    };
-  } catch (_err) {
-    return { transactions: [], inventory: [] };
-  }
-}
-
-// In-memory DB: no writes are persisted to data.json.
-const memoryData = safeLoadInitialData();
+// Local API runtime cache only (no data.json reads/writes).
+const memoryData = {
+  transactions: [],
+  inventory: [],
+};
 
 // Backfill missing user keys for legacy/demo rows in memory only.
 if (Array.isArray(memoryData.transactions)) {

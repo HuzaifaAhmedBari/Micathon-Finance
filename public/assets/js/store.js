@@ -10,6 +10,14 @@ const HP = (() => {
     return window.supabase;
   }
 
+  function requireSupabaseClient() {
+    const client = getSupabaseClient();
+    if (!client) {
+      throw new Error('Supabase is required for data persistence. Check /supabase-config.js and Supabase client loading.');
+    }
+    return client;
+  }
+
   function getUserKey() {
     const account = window.HPAccount && typeof window.HPAccount.readAccount === 'function'
       ? window.HPAccount.readAccount()
@@ -53,67 +61,61 @@ const HP = (() => {
 
   // ── CRUD: Transactions ────────────────────────────────────────────
   async function getTransactions(options = {}) {
-    const client = getSupabaseClient();
-    if (client) {
-      const storeScoped = !options || options.storeScoped !== false;
-      let query = client
-        .from('demo_transactions')
-        .select('*')
-        .eq('user_key', getUserKey());
+    const client = requireSupabaseClient();
+    const storeScoped = !options || options.storeScoped !== false;
+    let query = client
+      .from('demo_transactions')
+      .select('*')
+      .eq('user_key', getUserKey());
 
-      if (storeScoped) {
-        query = query.eq('store_key', getStoreKey());
-      }
-
-      query = query.order('transaction_date', { ascending: false });
-      const { data, error } = await query;
-      if (!error && Array.isArray(data)) {
-        return data.map(row => ({
-          id: row.id,
-          date: row.transaction_date,
-          description: row.description,
-          category: row.category,
-          type: row.type,
-          amount: Number(row.amount || 0),
-          unit: row.unit || 'pcs',
-          notes: row.notes || '',
-          inventoryItemId: row.inventory_item_id || null,
-          inventoryQtyChange: row.inventory_qty_change == null ? null : Number(row.inventory_qty_change),
-          isUtility: row.is_utility === true,
-          userKey: row.user_key,
-          storeKey: row.store_key,
-        }));
-      }
+    if (storeScoped) {
+      query = query.eq('store_key', getStoreKey());
     }
 
-    const params = new URLSearchParams({ userKey: getUserKey() });
-    if (options && options.storeScoped) {
-      params.set('storeKey', getStoreKey());
+    query = query.order('transaction_date', { ascending: false });
+    const { data, error } = await query;
+    if (error) {
+      throw error;
     }
-    return await apiRequest(`/transactions?${params.toString()}`);
+
+    const rows = Array.isArray(data) ? data : [];
+    return rows.map(row => ({
+      id: row.id,
+      date: row.transaction_date,
+      description: row.description,
+      category: row.category,
+      type: row.type,
+      amount: Number(row.amount || 0),
+      unit: row.unit || 'pcs',
+      notes: row.notes || '',
+      inventoryItemId: row.inventory_item_id || null,
+      inventoryQtyChange: row.inventory_qty_change == null ? null : Number(row.inventory_qty_change),
+      isUtility: row.is_utility === true,
+      userKey: row.user_key,
+      storeKey: row.store_key,
+    }));
   }
 
   async function addTransaction(txn) {
-    const client = getSupabaseClient();
-    if (client) {
-      const userKey = getUserKey();
-      const storeKey = getStoreKey();
-      const transactionId = `txn_${Date.now()}`;
-      const normalized = {
-        id: transactionId,
-        user_key: userKey,
-        store_key: storeKey,
-        transaction_date: txn.date,
-        description: txn.description,
-        category: txn.category,
-        type: txn.type,
-        amount: Number(txn.amount || 0),
-        unit: txn.unit || 'pcs',
-        notes: txn.notes || '',
-        inventory_item_id: txn.inventoryItemId || null,
-        inventory_qty_change: txn.inventoryQtyChange == null ? null : Number(txn.inventoryQtyChange),
-        is_utility: txn.isUtility === true,
-      };
+    const client = requireSupabaseClient();
+    const userKey = getUserKey();
+    const storeKey = getStoreKey();
+    const transactionId = `txn_${Date.now()}`;
+    const normalized = {
+      id: transactionId,
+      user_key: userKey,
+      store_key: storeKey,
+      transaction_date: txn.date,
+      description: txn.description,
+      category: txn.category,
+      type: txn.type,
+      amount: Number(txn.amount || 0),
+      unit: txn.unit || 'pcs',
+      notes: txn.notes || '',
+      inventory_item_id: txn.inventoryItemId || null,
+      inventory_qty_change: txn.inventoryQtyChange == null ? null : Number(txn.inventoryQtyChange),
+      is_utility: txn.isUtility === true,
+    };
 
       if (normalized.type === 'expense' && normalized.category === 'Misc' && !normalized.inventory_item_id) {
         const qty = normalized.inventory_qty_change && normalized.inventory_qty_change > 0 ? normalized.inventory_qty_change : 1;
@@ -184,157 +186,131 @@ const HP = (() => {
         }
       }
 
-      return {
-        id: normalized.id,
-        date: normalized.transaction_date,
-        description: normalized.description,
-        category: normalized.category,
-        type: normalized.type,
-        amount: normalized.amount,
-        unit: normalized.unit,
-        notes: normalized.notes,
-        inventoryItemId: normalized.inventory_item_id,
-        inventoryQtyChange: normalized.inventory_qty_change,
-        isUtility: normalized.is_utility,
-        userKey: normalized.user_key,
-        storeKey: normalized.store_key,
-      };
-    }
-
-    return await apiRequest('/transactions', 'POST', {
-      ...txn,
-      userKey: getUserKey(),
-      storeKey: getStoreKey(),
-    });
+    return {
+      id: normalized.id,
+      date: normalized.transaction_date,
+      description: normalized.description,
+      category: normalized.category,
+      type: normalized.type,
+      amount: normalized.amount,
+      unit: normalized.unit,
+      notes: normalized.notes,
+      inventoryItemId: normalized.inventory_item_id,
+      inventoryQtyChange: normalized.inventory_qty_change,
+      isUtility: normalized.is_utility,
+      userKey: normalized.user_key,
+      storeKey: normalized.store_key,
+    };
   }
 
   async function deleteTransaction(id) {
-    const client = getSupabaseClient();
-    if (client) {
-      const result = await client
-        .from('demo_transactions')
-        .eq('id', id)
-        .eq('user_key', getUserKey())
-        .eq('store_key', getStoreKey())
-        .delete();
+    const client = requireSupabaseClient();
+    const result = await client
+      .from('demo_transactions')
+      .eq('id', id)
+      .eq('user_key', getUserKey())
+      .eq('store_key', getStoreKey())
+      .delete();
 
-      if (result.error) throw result.error;
-      return null;
-    }
-
-    return await apiRequest(`/transactions/${id}?userKey=${encodeURIComponent(getUserKey())}`, 'DELETE');
+    if (result.error) throw result.error;
+    return null;
   }
 
   // ── CRUD: Inventory ───────────────────────────────────────────────
   async function getInventory() {
-    const client = getSupabaseClient();
-    if (client) {
-      const { data, error } = await client
-        .from('demo_inventory_items')
-        .select('*')
-        .eq('user_key', getUserKey())
-        .eq('store_key', getStoreKey())
-        .order('created_at', { ascending: false });
+    const client = requireSupabaseClient();
+    const { data, error } = await client
+      .from('demo_inventory_items')
+      .select('*')
+      .eq('user_key', getUserKey())
+      .eq('store_key', getStoreKey())
+      .order('created_at', { ascending: false });
 
-      if (!error && Array.isArray(data)) {
-        return data.map(row => ({
-          id: row.id,
-          userKey: row.user_key,
-          storeKey: row.store_key,
-          name: row.name,
-          category: row.category,
-          qty: Number(row.qty || 0),
-          unit: row.unit || 'pcs',
-          costPrice: Number(row.cost_price || 0),
-          salePrice: Number(row.sale_price || 0),
-          maxQty: Number(row.max_qty || 0),
-          lowThreshold: Number(row.low_threshold || 0),
-        }));
-      }
+    if (error) {
+      throw error;
     }
 
-    return await apiRequest(`/inventory?userKey=${encodeURIComponent(getUserKey())}`);
+    const rows = Array.isArray(data) ? data : [];
+    return rows.map(row => ({
+      id: row.id,
+      userKey: row.user_key,
+      storeKey: row.store_key,
+      name: row.name,
+      category: row.category,
+      qty: Number(row.qty || 0),
+      unit: row.unit || 'pcs',
+      costPrice: Number(row.cost_price || 0),
+      salePrice: Number(row.sale_price || 0),
+      maxQty: Number(row.max_qty || 0),
+      lowThreshold: Number(row.low_threshold || 0),
+    }));
   }
 
   async function addInventoryItem(item) {
-    const client = getSupabaseClient();
-    if (client) {
-      const normalized = { ...item };
-      if (normalized.unit === 'dozen') {
-        normalized.qty = (normalized.qty || 0) * 12;
-        if (normalized.costPrice) normalized.costPrice = normalized.costPrice / 12;
-        if (normalized.salePrice) normalized.salePrice = normalized.salePrice / 12;
-        if (normalized.maxQty) normalized.maxQty = normalized.maxQty * 12;
-        if (normalized.lowThreshold) normalized.lowThreshold = normalized.lowThreshold * 12;
-        normalized.unit = 'pcs';
-      }
-
-      const payload = {
-        id: `inv_${Date.now()}`,
-        user_key: getUserKey(),
-        store_key: getStoreKey(),
-        name: normalized.name,
-        category: normalized.category,
-        qty: Number(normalized.qty || 0),
-        unit: normalized.unit || 'pcs',
-        cost_price: Number(normalized.costPrice || 0),
-        sale_price: Number(normalized.salePrice || 0),
-        max_qty: Number(normalized.maxQty || 20),
-        low_threshold: Number(normalized.lowThreshold || 5),
-      };
-
-      const result = await client.from('demo_inventory_items').insert(payload);
-      if (result.error) throw result.error;
-
-      return {
-        id: payload.id,
-        userKey: payload.user_key,
-        storeKey: payload.store_key,
-        name: payload.name,
-        category: payload.category,
-        qty: payload.qty,
-        unit: payload.unit,
-        costPrice: payload.cost_price,
-        salePrice: payload.sale_price,
-        maxQty: payload.max_qty,
-        lowThreshold: payload.low_threshold,
-      };
+    const client = requireSupabaseClient();
+    const normalized = { ...item };
+    if (normalized.unit === 'dozen') {
+      normalized.qty = (normalized.qty || 0) * 12;
+      if (normalized.costPrice) normalized.costPrice = normalized.costPrice / 12;
+      if (normalized.salePrice) normalized.salePrice = normalized.salePrice / 12;
+      if (normalized.maxQty) normalized.maxQty = normalized.maxQty * 12;
+      if (normalized.lowThreshold) normalized.lowThreshold = normalized.lowThreshold * 12;
+      normalized.unit = 'pcs';
     }
 
-    return await apiRequest('/inventory', 'POST', {
-      ...item,
-      userKey: getUserKey(),
-    });
+    const payload = {
+      id: `inv_${Date.now()}`,
+      user_key: getUserKey(),
+      store_key: getStoreKey(),
+      name: normalized.name,
+      category: normalized.category,
+      qty: Number(normalized.qty || 0),
+      unit: normalized.unit || 'pcs',
+      cost_price: Number(normalized.costPrice || 0),
+      sale_price: Number(normalized.salePrice || 0),
+      max_qty: Number(normalized.maxQty || 20),
+      low_threshold: Number(normalized.lowThreshold || 5),
+    };
+
+    const result = await client.from('demo_inventory_items').insert(payload);
+    if (result.error) throw result.error;
+
+    return {
+      id: payload.id,
+      userKey: payload.user_key,
+      storeKey: payload.store_key,
+      name: payload.name,
+      category: payload.category,
+      qty: payload.qty,
+      unit: payload.unit,
+      costPrice: payload.cost_price,
+      salePrice: payload.sale_price,
+      maxQty: payload.max_qty,
+      lowThreshold: payload.low_threshold,
+    };
   }
 
   async function updateInventoryItem(id, updates) {
-    const client = getSupabaseClient();
-    if (client) {
-      const payload = {};
-      if (Object.prototype.hasOwnProperty.call(updates, 'name')) payload.name = updates.name;
-      if (Object.prototype.hasOwnProperty.call(updates, 'category')) payload.category = updates.category;
-      if (Object.prototype.hasOwnProperty.call(updates, 'qty')) payload.qty = Number(updates.qty || 0);
-      if (Object.prototype.hasOwnProperty.call(updates, 'unit')) payload.unit = updates.unit;
-      if (Object.prototype.hasOwnProperty.call(updates, 'costPrice')) payload.cost_price = Number(updates.costPrice || 0);
-      if (Object.prototype.hasOwnProperty.call(updates, 'salePrice')) payload.sale_price = Number(updates.salePrice || 0);
-      if (Object.prototype.hasOwnProperty.call(updates, 'maxQty')) payload.max_qty = Number(updates.maxQty || 0);
-      if (Object.prototype.hasOwnProperty.call(updates, 'lowThreshold')) payload.low_threshold = Number(updates.lowThreshold || 0);
+    const client = requireSupabaseClient();
+    const payload = {};
+    if (Object.prototype.hasOwnProperty.call(updates, 'name')) payload.name = updates.name;
+    if (Object.prototype.hasOwnProperty.call(updates, 'category')) payload.category = updates.category;
+    if (Object.prototype.hasOwnProperty.call(updates, 'qty')) payload.qty = Number(updates.qty || 0);
+    if (Object.prototype.hasOwnProperty.call(updates, 'unit')) payload.unit = updates.unit;
+    if (Object.prototype.hasOwnProperty.call(updates, 'costPrice')) payload.cost_price = Number(updates.costPrice || 0);
+    if (Object.prototype.hasOwnProperty.call(updates, 'salePrice')) payload.sale_price = Number(updates.salePrice || 0);
+    if (Object.prototype.hasOwnProperty.call(updates, 'maxQty')) payload.max_qty = Number(updates.maxQty || 0);
+    if (Object.prototype.hasOwnProperty.call(updates, 'lowThreshold')) payload.low_threshold = Number(updates.lowThreshold || 0);
 
-      const result = await client
-        .from('demo_inventory_items')
-        .eq('id', id)
-        .eq('user_key', getUserKey())
-        .eq('store_key', getStoreKey())
-        .update(payload);
+    const result = await client
+      .from('demo_inventory_items')
+      .eq('id', id)
+      .eq('user_key', getUserKey())
+      .eq('store_key', getStoreKey())
+      .update(payload);
 
-      if (result.error) throw result.error;
-      return result.data;
-    }
-
-    return await apiRequest(`/inventory/${id}?userKey=${encodeURIComponent(getUserKey())}`, 'PUT', {
-      ...updates,
-      userKey: getUserKey(),
-    });
+    if (result.error) throw result.error;
+    return result.data;
   }
 
   // ── Analytics helpers ─────────────────────────────────────────────

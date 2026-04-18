@@ -25,6 +25,7 @@
 - Forecast runs and points persist to Supabase (`demo_forecast_runs`, `demo_forecast_points`) and are also user/store scoped.
 - New account creation includes contact number and saves it to `demo_public_users.phone`.
 - Re-run [supabase_demo_public_users.sql](supabase_demo_public_users.sql) after pulling new changes so demo data tables/policies are created.
+- Runtime app data does not use `server/data.json`; persistence is Supabase-only for transactions, inventory, and forecast artifacts.
 
 ## Environment
 
