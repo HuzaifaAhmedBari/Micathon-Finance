@@ -72,6 +72,28 @@ function syncProfileFields(account, preferences) {
   }
 }
 
+function setActiveProfileSection(section) {
+  document.querySelectorAll('.profile-nav-item[data-section]').forEach(item => {
+    item.classList.toggle('active', item.dataset.section === section);
+  });
+
+  document.querySelectorAll('.profile-panel[data-section]').forEach(panel => {
+    panel.classList.toggle('active', panel.dataset.section === section);
+  });
+}
+
+function setupProfileTabs() {
+  const navItems = document.querySelectorAll('.profile-nav-item[data-section]');
+  if (!navItems.length) return;
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const section = item.dataset.section || 'personal';
+      setActiveProfileSection(section);
+    });
+  });
+}
+
 function clearPasswordInputs() {
   const current = document.getElementById('currentPassword');
   const next = document.getElementById('newPassword');
@@ -121,10 +143,52 @@ async function hashPasswordSha256(password) {
 document.addEventListener('DOMContentLoaded', () => {
   const accountApi = getProfileApi();
   if (!accountApi) return;
+  setupProfileTabs();
+  setActiveProfileSection('personal');
 
-  const account = accountApi.readAccount();
-  const preferences = accountApi.readPreferences();
-  syncProfileFields(account, preferences);
+  const hydrateFromDb = async () => {
+    const account = accountApi.readAccount();
+    const client = getSupabaseClient();
+    const userEmail = sanitizeEmail(account.email || '');
+
+    if (!client || !userEmail) {
+      syncProfileFields(account, accountApi.readPreferences());
+      return;
+    }
+
+    const { data, error } = await client
+      .from('demo_public_users')
+      .select('*')
+      .eq('email', userEmail);
+
+    if (error || !Array.isArray(data) || data.length === 0) {
+      syncProfileFields(account, accountApi.readPreferences());
+      return;
+    }
+
+    const row = data[0];
+    const updatedAccount = accountApi.writeAccount({
+      firstName: row.first_name || '',
+      lastName: row.last_name || '',
+      storeName: row.store_name || '',
+      phone: row.phone || '',
+      city: row.city || '',
+      area: row.area || '',
+      role: row.role || 'Store Owner',
+      email: row.email || account.email || '',
+    });
+
+    const updatedPrefs = accountApi.writePreferences({
+      lowStockAlerts: row.pref_low_stock_alerts !== false,
+      dailySummary: row.pref_daily_summary !== false,
+      forecastUpdates: row.pref_forecast_updates === true,
+    });
+
+    syncProfileFields(updatedAccount, updatedPrefs);
+    accountApi.syncAccountChrome();
+  };
+
+  hydrateFromDb();
 
   const personalFields = [
     document.getElementById('profileFirstName'),
@@ -175,6 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
         }
+        if (updatedAccount.email && updatedAccount.email !== previousEmail) {
+          accountApi.setSession(updatedAccount);
+        }
         accountApi.syncAccountChrome();
         setProfileStatus('Personal information saved.', 'success');
       }
@@ -219,12 +286,31 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.querySelectorAll('#prefLowStockAlerts, #prefDailySummary, #prefForecastUpdates').forEach(input => {
-    input.addEventListener('change', () => {
-      accountApi.writePreferences({
+    input.addEventListener('change', async () => {
+      const prefs = accountApi.writePreferences({
         lowStockAlerts: document.getElementById('prefLowStockAlerts').checked,
         dailySummary: document.getElementById('prefDailySummary').checked,
         forecastUpdates: document.getElementById('prefForecastUpdates').checked,
       });
+
+      const client = getSupabaseClient();
+      const currentEmail = sanitizeEmail(accountApi.readAccount().email || '');
+      if (client && currentEmail) {
+        const result = await client
+          .from('demo_public_users')
+          .eq('email', currentEmail)
+          .update({
+            pref_low_stock_alerts: prefs.lowStockAlerts,
+            pref_daily_summary: prefs.dailySummary,
+            pref_forecast_updates: prefs.forecastUpdates,
+          });
+
+        if (result.error) {
+          setProfileStatus(result.error.message || 'Could not save notification preferences.', 'danger');
+          return;
+        }
+      }
+
       applyToggleVisual(input);
       setProfileStatus('Notification preferences saved.', 'success');
     });

@@ -35,4 +35,5 @@
 - `login.html`, `register.html`, and `profile.html` run in demo-table mode using `public.demo_public_users`.
 - This avoids Supabase Auth signup/signin rate limits during hackathon demos.
 - Run [supabase_demo_public_users.sql](supabase_demo_public_users.sql) before testing auth flows.
-- The profile page updates demo-user fields directly in `demo_public_users`.
+- The profile page tabs (personal/store/notifications/security) load and save directly to `demo_public_users`.
+- `payment.html` updates `subscription_plan`, `subscription_status`, and `subscription_renewal_date` in `demo_public_users`.

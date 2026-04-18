@@ -768,6 +768,21 @@ tbody tr:hover { background: var(--canvas); }
 .profile-nav-item:hover { background: var(--canvas); color: var(--text-primary); }
 .profile-nav-item.active { background: var(--emerald-light); color: var(--emerald); font-weight: 600; }
 .profile-nav-item svg { width: 16px; height: 16px; }
+.profile-settings-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.profile-panel { display: none; }
+.profile-panel.active { display: block; }
+.profile-fields-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  min-width: 0;
+}
+.profile-span-2 { grid-column: span 2; }
 
 /* ---- Forecast Chart Container ---- */
 .chart-container { position: relative; width: 100%; }
@@ -943,6 +958,8 @@ tbody tr:hover { background: var(--canvas); }
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
   .two-col-65-35 { grid-template-columns: 1fr; }
   .profile-grid { grid-template-columns: 1fr; }
+  .profile-fields-grid { grid-template-columns: 1fr; }
+  .profile-span-2 { grid-column: span 1; }
   .auth-layout { grid-template-columns: 1fr; }
   .auth-visual { display: none; }
   .auth-form-panel { padding: 40px 24px; }
@@ -968,6 +985,8 @@ tbody tr:hover { background: var(--canvas); }
 
 @media (max-width: 900px) {
   .profile-grid { grid-template-columns: 1fr; }
+  .profile-fields-grid { grid-template-columns: 1fr; }
+  .profile-span-2 { grid-column: span 1; }
   .auth-layout { grid-template-columns: 1fr; }
   .auth-visual { display: none; }
   .auth-form-panel { padding: 40px 24px; }

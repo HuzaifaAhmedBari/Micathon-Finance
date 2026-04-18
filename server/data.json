@@ -193,6 +193,18 @@
       "lowThreshold": 5,
       "id": "inv_1776496799608",
       "userKey": "demo-owner@hisaabpro.test"
+    },
+    {
+      "name": "Basmati Rice",
+      "category": "Grocery",
+      "qty": 30,
+      "unit": "kg",
+      "costPrice": 1200,
+      "salePrice": 1500,
+      "maxQty": 3,
+      "lowThreshold": 25,
+      "userKey": "ahmedkhan@gmail.com",
+      "id": "inv_1776530622269"
     }
   ]
 }

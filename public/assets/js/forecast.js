@@ -77,6 +77,67 @@ function updateKPICards(forecastData) {
   if (kpiValues[2]) kpiValues[2].textContent = fmt(worstCase);
 }
 
+function updateTrendSummaries(dailyHistory, forecastData) {
+  const primary = document.getElementById('forecastInsightPrimary');
+  const primaryMeta = document.getElementById('forecastInsightPrimaryMeta');
+  const secondary = document.getElementById('forecastInsightSecondary');
+  const secondaryMeta = document.getElementById('forecastInsightSecondaryMeta');
+  const trendCaption = document.getElementById('forecastTrendCaption');
+
+  if (!dailyHistory.length || !forecastData.length) return;
+
+  const recentActual = dailyHistory.slice(-7).reduce((sum, row) => sum + row.amount, 0);
+  const forecastNext7 = forecastData.slice(0, 7).reduce((sum, row) => sum + row.yhat, 0);
+  const baseline = recentActual > 0 ? recentActual : 1;
+  const trendPct = Math.round(((forecastNext7 - recentActual) / baseline) * 100);
+  const absPct = Math.abs(trendPct);
+
+  if (trendCaption) {
+    trendCaption.textContent = trendPct >= 0
+      ? `Positive trend: +${absPct}% vs last 7 days`
+      : `Negative trend: -${absPct}% vs last 7 days`;
+  }
+
+  const byWeekday = new Map();
+  dailyHistory.forEach(row => {
+    const day = new Date(row.date).toLocaleDateString('en-PK', { weekday: 'long' });
+    const curr = byWeekday.get(day) || { sum: 0, count: 0 };
+    curr.sum += row.amount;
+    curr.count += 1;
+    byWeekday.set(day, curr);
+  });
+
+  let bestDay = 'Friday';
+  let bestAvg = 0;
+  for (const [day, entry] of byWeekday.entries()) {
+    const avg = entry.sum / Math.max(1, entry.count);
+    if (avg > bestAvg) {
+      bestAvg = avg;
+      bestDay = day;
+    }
+  }
+
+  if (primary) {
+    primary.innerHTML = trendPct >= 0
+      ? `Positive trend detected: <strong>+${absPct}%</strong> expected in the next 7 days.`
+      : `Demand cooling expected: <strong>-${absPct}%</strong> projected over the next 7 days.`;
+  }
+  if (primaryMeta) {
+    primaryMeta.textContent = `Historically strongest day: ${bestDay}. Adjust stock one day earlier.`;
+  }
+
+  const minForecast = forecastData.reduce((min, row) => row.yhat < min.yhat ? row : min, forecastData[0]);
+  const dipDate = new Date(minForecast.ds).toLocaleDateString('en-PK', { day: 'numeric', month: 'short' });
+  if (secondary) {
+    secondary.innerHTML = trendPct >= 0
+      ? `Momentum looks healthy. Keep an eye on <strong>${dipDate}</strong> for a short dip.`
+      : `Plan tighter spending near <strong>${dipDate}</strong> as revenue softens.`;
+  }
+  if (secondaryMeta) {
+    secondaryMeta.textContent = `Trend confidence computed from ${dailyHistory.length} daily points.`;
+  }
+}
+
 // ---- Update Model Notes card with real history count ----
 function updateModelNotes(historyLength, usingProphet) {
   const notesEl = document.getElementById("model-notes-text");
@@ -170,6 +231,7 @@ async function loadForecast() {
 
     // 7. Update KPI cards and metadata
     updateKPICards(forecastData);
+    updateTrendSummaries(dailyHistory, forecastData);
     updateModelNotes(dailyHistory.length, usingProphet);
     updateHeaderStatus(usingProphet);
 

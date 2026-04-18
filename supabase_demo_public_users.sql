@@ -18,6 +18,12 @@ create table if not exists public.demo_public_users (
   phone text not null default '',
   city text not null default '',
   area text not null default '',
+  pref_low_stock_alerts boolean not null default true,
+  pref_daily_summary boolean not null default true,
+  pref_forecast_updates boolean not null default false,
+  subscription_plan text not null default 'starter',
+  subscription_status text not null default 'active',
+  subscription_renewal_date date,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -25,6 +31,24 @@ create table if not exists public.demo_public_users (
 
 alter table public.demo_public_users
 add column if not exists demo_password_hash text;
+
+alter table public.demo_public_users
+add column if not exists pref_low_stock_alerts boolean not null default true;
+
+alter table public.demo_public_users
+add column if not exists pref_daily_summary boolean not null default true;
+
+alter table public.demo_public_users
+add column if not exists pref_forecast_updates boolean not null default false;
+
+alter table public.demo_public_users
+add column if not exists subscription_plan text not null default 'starter';
+
+alter table public.demo_public_users
+add column if not exists subscription_status text not null default 'active';
+
+alter table public.demo_public_users
+add column if not exists subscription_renewal_date date;
 
 do $$
 begin
@@ -35,12 +59,33 @@ begin
       and table_name = 'demo_public_users'
       and column_name = 'demo_password'
   ) then
+    execute $legacy_soften$
+      alter table public.demo_public_users
+      alter column demo_password drop not null
+    $legacy_soften$;
+
+    execute $legacy_default$
+      alter table public.demo_public_users
+      alter column demo_password set default ''
+    $legacy_default$;
+
     execute $migrate$
       update public.demo_public_users
       set demo_password_hash = encode(digest(coalesce(demo_password, ''), 'sha256'), 'hex')
       where (demo_password_hash is null or demo_password_hash = '')
         and coalesce(demo_password, '') <> ''
     $migrate$;
+
+    execute $legacy_fill$
+      update public.demo_public_users
+      set demo_password = ''
+      where demo_password is null
+    $legacy_fill$;
+
+    execute $legacy_drop$
+      alter table public.demo_public_users
+      drop column if exists demo_password
+    $legacy_drop$;
   end if;
 end
 $$;
@@ -99,6 +144,12 @@ insert into public.demo_public_users (
   phone,
   city,
   area,
+  pref_low_stock_alerts,
+  pref_daily_summary,
+  pref_forecast_updates,
+  subscription_plan,
+  subscription_status,
+  subscription_renewal_date,
   is_active
 )
 values
@@ -113,6 +164,12 @@ values
     '+92 300 0000001',
     'Lahore',
     'Gulberg',
+    true,
+    true,
+    true,
+    'pro',
+    'active',
+    current_date + 30,
     true
   ),
   (
@@ -126,6 +183,12 @@ values
     '+92 300 0000002',
     'Karachi',
     'Clifton',
+    true,
+    false,
+    true,
+    'starter',
+    'active',
+    current_date + 14,
     true
   )
 on conflict (email) do update set
@@ -137,6 +200,12 @@ on conflict (email) do update set
   phone = excluded.phone,
   city = excluded.city,
   area = excluded.area,
+  pref_low_stock_alerts = excluded.pref_low_stock_alerts,
+  pref_daily_summary = excluded.pref_daily_summary,
+  pref_forecast_updates = excluded.pref_forecast_updates,
+  subscription_plan = excluded.subscription_plan,
+  subscription_status = excluded.subscription_status,
+  subscription_renewal_date = excluded.subscription_renewal_date,
   is_active = excluded.is_active,
   updated_at = now();
 
@@ -144,5 +213,4 @@ on conflict (email) do update set
 -- demo-owner@hisaabpro.test / Demo123!
 -- demo-manager@hisaabpro.test / Demo123!
 
--- Optional cleanup after migration:
--- alter table public.demo_public_users drop column if exists demo_password;
+-- Legacy plaintext password column is dropped automatically during migration.

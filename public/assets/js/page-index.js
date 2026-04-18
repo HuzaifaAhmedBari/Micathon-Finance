@@ -9,6 +9,36 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('dashProfit').textContent   = Math.abs(today.profit).toLocaleString('en-PK');
   document.getElementById('dashBalance').textContent  = Math.abs(monthly.netBalance).toLocaleString('en-PK');
 
+  const allTxns = await HP.getTransactions();
+  const salesTxns = allTxns.filter(t => t.type === 'sale').sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const recent7 = salesTxns.slice(-7).reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  const prev7 = salesTxns.slice(-14, -7).reduce((sum, t) => sum + Number(t.amount || 0), 0);
+  const base = prev7 > 0 ? prev7 : 1;
+  const trendPct = Math.round(((recent7 - prev7) / base) * 100);
+  const absPct = Math.abs(trendPct);
+
+  const trendBanner = document.getElementById('dashTrendBanner');
+  const insightPrimary = document.getElementById('dashInsightPrimary');
+  const insightPrimaryMeta = document.getElementById('dashInsightPrimaryMeta');
+
+  if (trendBanner) {
+    trendBanner.innerHTML = trendPct >= 0
+      ? `Trend engine: <strong>Revenue trend is positive by +${absPct}%</strong> vs the previous week.`
+      : `Trend engine: <strong>Revenue trend is down by -${absPct}%</strong> vs the previous week.`;
+  }
+
+  if (insightPrimary) {
+    insightPrimary.innerHTML = trendPct >= 0
+      ? `Positive momentum: sales improved by <strong>${absPct}%</strong> this week.`
+      : `Alert: sales dipped by <strong>${absPct}%</strong> this week.`;
+  }
+
+  if (insightPrimaryMeta) {
+    insightPrimaryMeta.textContent = trendPct >= 0
+      ? 'Consider a small inventory top-up for fast-moving items.'
+      : 'Reduce slow-moving purchases and push bundles for recovery.';
+  }
+
   // Low Stock Table
   const tbody = document.getElementById('dashLowStockBody');
   const inv = await HP.getInventory();
