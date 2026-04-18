@@ -2,8 +2,7 @@
 // HisaabPro — Chart.js Configurations
 // =========================================
 
-document.addEventListener('DOMContentLoaded', async () => {
-  await HP.init();
+document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Dashboard: Revenue vs Expenses + Forecast ----
   const dashCanvas = document.getElementById('revenueChart');
@@ -20,24 +19,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       const d = new Date(today); d.setDate(today.getDate() + i);
       labels.push(d.toLocaleDateString('en-PK', { month: 'short', day: 'numeric' }));
     }
-    const revenue = Array(30).fill(0);
-    const expenses = Array(30).fill(0);
-    const allTxns = window.HP ? await HP.getTransactions() : [];
-    
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(today); d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const dayTxns = allTxns.filter(t => t.date === dateStr);
-      revenue[29 - i] = dayTxns.filter(t => t.type === 'sale').reduce((s, t) => s + t.amount, 0);
-      expenses[29 - i] = dayTxns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-    }
-
-    // Prophet Standby - simple placeholder forecast
-    const lastRev = revenue[29] || 5000;
-    const forecastBase = Array.from({length: 14}, (_, i) => lastRev + Math.round(Math.sin((i)*0.8)*400 + i*50));
-    const forecast = Array(30).fill(null).concat(forecastBase);
-    const forecastUp = Array(30).fill(null).concat(forecastBase.map(v => v + 600));
-    const forecastDn = Array(30).fill(null).concat(forecastBase.map(v => v - 400));
+    const revenue = [4200,5100,3800,6200,4900,5500,7100,4300,5800,6100,4700,5200,6800,4100,5600,7200,4800,5300,6600,4200,5900,7400,5100,4600,6300,5800,4900,6100,5400,7200];
+    const expenses = [2100,2400,1900,3100,2300,2600,3300,2100,2800,3000,2200,2500,3200,2000,2700,3400,2300,2600,3100,2000,2800,3500,2400,2200,3000,2700,2300,2900,2500,3400];
+    const forecast = Array(30).fill(null).concat([7400,6900,7600,7100,8200,7500,6800,7900,7200,8500,7000,6700,7800,8100]);
+    const forecastUp = Array(30).fill(null).concat([8100,7600,8300,7800,9000,8200,7500,8700,7900,9300,7700,7400,8500,8800]);
+    const forecastDn = Array(30).fill(null).concat([6700,6200,6900,6400,7400,6800,6100,7100,6500,7700,6300,6000,7100,7400]);
 
     new Chart(dashCanvas, {
       type: 'line',
@@ -110,133 +96,65 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-
-
-  // ---- Forecast Page: Full Prophet Chart ----
-  const forecastCanvas = document.getElementById('forecastChart');
-  if (forecastCanvas) {
-    const labels = [];
-    const today = new Date();
-    for (let i = 59; i >= 0; i--) {
-      const d = new Date(today); d.setDate(today.getDate() - i);
-      labels.push(d.toLocaleDateString('en-PK', { month: 'short', day: 'numeric' }));
-    }
-    for (let i = 1; i <= 30; i++) {
-      const d = new Date(today); d.setDate(today.getDate() + i);
-      labels.push(d.toLocaleDateString('en-PK', { month: 'short', day: 'numeric' }));
-    }
-    const historical = Array(60).fill(0);
-    const allTxns = window.HP ? await HP.getTransactions() : [];
-    
-    for (let i = 59; i >= 0; i--) {
-      const d = new Date(today); d.setDate(today.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      historical[59 - i] = allTxns
-        .filter(t => t.date === dateStr && t.type === 'sale')
-        .reduce((s, t) => s + t.amount, 0);
-    }
-    
-    // Prophet Standby
-    const lastRev = historical[59] || 5000;
-    const fBase = Array.from({ length: 30 }, (_, i) => lastRev + Math.round(Math.sin(i*0.5)*600 + i*30));
-    const forecastLine = Array(60).fill(null).concat(fBase);
-    const upBound = Array(60).fill(null).concat(fBase.map(v => v + 800));
-    const dnBound = Array(60).fill(null).concat(fBase.map(v => v - 600));
-
-    new Chart(forecastCanvas, {
-      type: 'line',
+  // ---- Transaction Log: Spending by Category ----
+  const catCanvas = document.getElementById('categoryChart');
+  if (catCanvas) {
+    new Chart(catCanvas, {
+      type: 'bar',
       data: {
-        labels,
-        datasets: [
-          {
-            label: 'Actual Revenue',
-            data: historical,
-            borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.07)',
-            borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 5,
-          },
-          {
-            label: 'Forecast',
-            data: forecastLine,
-            borderColor: '#65a30d', borderDash: [7, 4],
-            backgroundColor: 'transparent', borderWidth: 2.5,
-            tension: 0.4, pointRadius: 0, pointHoverRadius: 5,
-          },
-          {
-            label: 'Upper Bound',
-            data: upBound,
-            borderColor: 'transparent', backgroundColor: 'rgba(101,163,13,0.1)',
-            fill: '+1', tension: 0.4, pointRadius: 0, borderWidth: 0,
-          },
-          {
-            label: 'Lower Bound',
-            data: dnBound,
-            borderColor: 'rgba(101,163,13,0.3)', borderDash: [3, 3],
-            backgroundColor: 'rgba(101,163,13,0.1)',
-            fill: false, tension: 0.4, pointRadius: 0, borderWidth: 1,
-          },
-        ]
+        labels: ['Stock', 'Rent', 'Utilities', 'Transport', 'Misc'],
+        datasets: [{
+          data: [58, 22, 10, 6, 4],
+          backgroundColor: [
+            'rgba(5,150,105,0.85)',
+            'rgba(220,38,38,0.75)',
+            'rgba(217,119,6,0.75)',
+            'rgba(101,163,13,0.75)',
+            'rgba(100,116,139,0.6)',
+          ],
+          borderRadius: 6, borderSkipped: false,
+        }]
       },
       options: {
-        responsive: true, maintainAspectRatio: false,
-        interaction: { intersect: false, mode: 'index' },
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: {
-            labels: { color: '#64748b', font: { family: 'Manrope', size: 12 }, boxWidth: 12, usePointStyle: true },
-            filter: item => item.label !== 'Upper Bound',
-          },
+          legend: { display: false },
           tooltip: {
             backgroundColor: '#fff', titleColor: '#0f172a', bodyColor: '#64748b',
-            borderColor: '#e2e8f0', borderWidth: 1, padding: 12,
-            callbacks: { label: ctx => ctx.raw ? `  ${ctx.dataset.label}: PKR ${ctx.raw.toLocaleString('en-PK')}` : '' }
+            borderColor: '#e2e8f0', borderWidth: 1,
+            callbacks: { label: ctx => `  ${ctx.raw}% of expenses` }
           }
         },
         scales: {
           x: {
-            grid: { color: 'rgba(0,0,0,0.04)' },
-            ticks: { color: '#94a3b8', font: { size: 11, family: 'Manrope' }, maxTicksLimit: 12, maxRotation: 0 },
+            max: 70, grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: { color: '#94a3b8', font: { size: 11, family: 'Space Grotesk' }, callback: v => v + '%' },
             border: { color: '#e2e8f0' }
           },
           y: {
-            grid: { color: 'rgba(0,0,0,0.04)' },
-            ticks: {
-              color: '#94a3b8', font: { size: 11, family: 'Space Grotesk' },
-              callback: val => 'PKR ' + (val >= 1000 ? (val/1000).toFixed(1) + 'k' : val)
-            },
-            border: { color: '#e2e8f0' }
+            grid: { display: false },
+            ticks: { color: '#64748b', font: { size: 12, family: 'Manrope', weight: '600' } },
+            border: { display: false }
           }
         }
       }
     });
   }
 
+  // ---- Forecast Page: Full Prophet Chart ----
+  // NOTE: Static mock data removed. Chart is now driven by renderForecastChart()
+  // which is called from forecast.js once real data is fetched.
+  // The canvas #forecastChart still lives in forecast.html — nothing changes there.
+
   // ---- Forecast: Seasonality ----
   const seasonCanvas = document.getElementById('seasonChart');
   if (seasonCanvas) {
-    const allTxns = window.HP ? await HP.getTransactions() : [];
-    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
-    const recentTxns = allTxns.filter(t => t.type === 'sale' && new Date(t.date) >= cutoff);
-    const dayTotals = [0,0,0,0,0,0,0];
-    const dayCounts = [0,0,0,0,0,0,0];
-    recentTxns.forEach(t => {
-      const dayRaw = new Date(t.date).getDay();
-      dayTotals[dayRaw] += t.amount;
-      dayCounts[dayRaw] += 1;
-    });
-    const avgs = Array(7).fill(0);
-    for(let i=0; i<7; i++) {
-      const avg = dayCounts[i] ? dayTotals[i]/dayCounts[i] : 0;
-      const idx = i === 0 ? 6 : i - 1; // map Sun(0) to 6 (Sun), Mon(1) to 0 (Mon)
-      avgs[idx] = avg;
-    }
-    const maxAvg = Math.max(...avgs, 1);
-    const seasonData = avgs.map(a => maxAvg ? Math.round((a/maxAvg)*100) : 0);
-
     new Chart(seasonCanvas, {
       type: 'bar',
       data: {
         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         datasets: [{
-          data: seasonData,
+          data: [72, 68, 74, 70, 91, 85, 78],
           backgroundColor: (ctx) => {
             const v = ctx.raw;
             if (v >= 85) return 'rgba(5,150,105,0.85)';
@@ -272,4 +190,134 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  // ---- Inventory: Stock Health Donut ----
+  const stockCanvas = document.getElementById('stockChart');
+  if (stockCanvas) {
+    new Chart(stockCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: ['Good Stock', 'Medium Stock', 'Low Stock'],
+        datasets: [{
+          data: [58, 29, 13],
+          backgroundColor: ['rgba(5,150,105,0.85)', 'rgba(217,119,6,0.75)', 'rgba(220,38,38,0.75)'],
+          borderWidth: 0, hoverOffset: 6,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: '#64748b', font: { size: 12, family: 'Manrope' }, usePointStyle: true, padding: 14 }
+          },
+          tooltip: {
+            backgroundColor: '#fff', titleColor: '#0f172a', bodyColor: '#64748b',
+            borderColor: '#e2e8f0', borderWidth: 1,
+            callbacks: { label: ctx => `  ${ctx.label}: ${ctx.raw}%` }
+          }
+        }
+      }
+    });
+  }
 });
+
+// =========================================
+// renderForecastChart — called by forecast.js with live data
+// Kept outside DOMContentLoaded so forecast.js can call it freely.
+// =========================================
+let forecastChartInstance = null;
+
+function renderForecastChart({ historicalLabels, historicalAmounts, forecastLabels, forecastYhat, forecastUpper, forecastLower }) {
+  const forecastCanvas = document.getElementById('forecastChart');
+  if (!forecastCanvas) return;
+
+  // Destroy previous chart instance before re-rendering (handles Re-run button)
+  if (forecastChartInstance) {
+    forecastChartInstance.destroy();
+    forecastChartInstance = null;
+  }
+
+  // Combine historical + forecast into one timeline
+  const allLabels = [...historicalLabels, ...forecastLabels];
+
+  // Historical line only covers the left portion; null-pad the right (forecast zone)
+  const historicalData = [
+    ...historicalAmounts,
+    ...Array(forecastLabels.length).fill(null)
+  ];
+
+  // Forecast lines only cover the right portion; null-pad the left (historical zone)
+  const forecastLine  = [...Array(historicalAmounts.length).fill(null), ...forecastYhat];
+  const upperBound    = [...Array(historicalAmounts.length).fill(null), ...forecastUpper];
+  const lowerBound    = [...Array(historicalAmounts.length).fill(null), ...forecastLower];
+
+  forecastChartInstance = new Chart(forecastCanvas, {
+    type: 'line',
+    data: {
+      labels: allLabels,
+      datasets: [
+        {
+          label: 'Actual Revenue',
+          data: historicalData,
+          borderColor: '#059669', backgroundColor: 'rgba(5,150,105,0.07)',
+          borderWidth: 2.5, fill: true, tension: 0.4, pointRadius: 0, pointHoverRadius: 5,
+        },
+        {
+          label: 'Forecast',
+          data: forecastLine,
+          borderColor: '#65a30d', borderDash: [7, 4],
+          backgroundColor: 'transparent', borderWidth: 2.5,
+          tension: 0.4, pointRadius: 0, pointHoverRadius: 5,
+        },
+        {
+          label: 'Upper Bound',
+          data: upperBound,
+          borderColor: 'transparent', backgroundColor: 'rgba(101,163,13,0.1)',
+          fill: '+1', tension: 0.4, pointRadius: 0, borderWidth: 0,
+        },
+        {
+          label: 'Lower Bound',
+          data: lowerBound,
+          borderColor: 'rgba(101,163,13,0.3)', borderDash: [3, 3],
+          backgroundColor: 'rgba(101,163,13,0.1)',
+          fill: false, tension: 0.4, pointRadius: 0, borderWidth: 1,
+        },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { intersect: false, mode: 'index' },
+      plugins: {
+        legend: {
+          labels: { color: '#64748b', font: { family: 'Manrope', size: 12 }, boxWidth: 12, usePointStyle: true },
+          filter: item => item.label !== 'Upper Bound',
+        },
+        tooltip: {
+          backgroundColor: '#fff', titleColor: '#0f172a', bodyColor: '#64748b',
+          borderColor: '#e2e8f0', borderWidth: 1, padding: 12,
+          callbacks: {
+            label: ctx => ctx.raw != null
+              ? `  ${ctx.dataset.label}: PKR ${ctx.raw.toLocaleString('en-PK')}`
+              : ''
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(0,0,0,0.04)' },
+          ticks: { color: '#94a3b8', font: { size: 11, family: 'Manrope' }, maxTicksLimit: 12, maxRotation: 0 },
+          border: { color: '#e2e8f0' }
+        },
+        y: {
+          grid: { color: 'rgba(0,0,0,0.04)' },
+          ticks: {
+            color: '#94a3b8', font: { size: 11, family: 'Space Grotesk' },
+            callback: val => 'PKR ' + (val >= 1000 ? (val/1000).toFixed(1) + 'k' : val)
+          },
+          border: { color: '#e2e8f0' }
+        }
+      }
+    }
+  });
+}
