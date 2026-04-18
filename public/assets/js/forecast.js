@@ -13,14 +13,28 @@ fetch(`${ML_API}/health`).catch(() => {});
 
 // ---- Fetch sales history from Supabase ----
 async function getSalesHistorySupabase() {
+  const userKey = (typeof window.HPAccount !== 'undefined' && window.HPAccount && typeof window.HPAccount.readAccount === 'function')
+    ? (window.HPAccount.readAccount().email || '').trim().toLowerCase()
+    : '';
+  const storeKey = (typeof window.HPAccount !== 'undefined' && window.HPAccount && typeof window.HPAccount.readAccount === 'function')
+    ? (window.HPAccount.readAccount().storeName || '').trim().toLowerCase()
+    : 'default-store';
+
+  if (!userKey) {
+    console.warn('No user key found, cannot fetch sales history');
+    return [];
+  }
+
   const { data, error } = await supabase
     .from("sales_entries")
     .select("amount, transaction_date")
+    .eq("user_key", userKey)
+    .eq("store_key", storeKey)
     .order("transaction_date", { ascending: true });
 
   if (error) {
     console.error("Supabase error:", error);
-    return null;
+    return [];
   }
   return (Array.isArray(data) ? data : []).map(row => ({
     date: String(row.transaction_date || '').slice(0, 10),
