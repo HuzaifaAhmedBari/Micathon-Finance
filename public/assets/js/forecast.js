@@ -2,7 +2,7 @@
 // HisaabPro — ML Forecast Integration
 // =========================================
 
-const ML_API = "http://127.0.0.1:8000"; // ← swap to Render URL when deploying
+const ML_API = window.ML_API_URL || 'https://micathon-finance-production-d9f6.up.railway.app/';
 const ML_RETRY_MS = 30000;
 
 let lastForecastSource = 'ml';
@@ -15,15 +15,15 @@ fetch(`${ML_API}/health`).catch(() => {});
 async function getSalesHistorySupabase() {
   const { data, error } = await supabase
     .from("sales_entries")
-    .select("amount, created_at")
-    .order("created_at", { ascending: true });
+    .select("amount, transaction_date")
+    .order("transaction_date", { ascending: true });
 
   if (error) {
     console.error("Supabase error:", error);
     return null;
   }
   return (Array.isArray(data) ? data : []).map(row => ({
-    date: String(row.created_at || '').slice(0, 10),
+    date: String(row.transaction_date || '').slice(0, 10),
     amount: Number(row.amount || 0),
   }));
 }
