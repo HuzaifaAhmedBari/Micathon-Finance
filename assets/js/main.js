@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Change page-level accent if on the log page
       const amountEl = document.getElementById('amountDisplay');
       if (amountEl) {
-        amountEl.className = 'kpi-value ' + (type === 'expense' ? 'coral' : 'emerald');
+        amountEl.className = 'amount-value ' + (type === 'expense' ? 'coral' : 'emerald');
       }
       const submitBtn = document.getElementById('submitBtn');
       if (submitBtn) {

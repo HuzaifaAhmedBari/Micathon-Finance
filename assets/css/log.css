@@ -1,0 +1,106 @@
+/* ===========================
+   log.css — Log Entry Page Styles
+   =========================== */
+
+.numpad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.numpad-key {
+  padding: 18px 10px;
+  background: var(--canvas);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 20px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.08s;
+  user-select: none;
+}
+
+.numpad-key:hover {
+  background: var(--border-light);
+}
+
+.numpad-key:active,
+.numpad-key.key-pressed {
+  transform: scale(0.96);
+  background: var(--emerald-light);
+}
+
+.numpad-key.key-back {
+  background: var(--border-light);
+  color: var(--coral);
+}
+
+.numpad-key.key-back.key-pressed {
+  background: rgba(var(--coral-rgb, 239, 68, 68), 0.15);
+}
+
+.numpad-key.key-zero {
+  grid-column: span 2;
+}
+
+.amount-display {
+  text-align: center;
+  padding: 28px 20px 20px;
+  background: var(--canvas);
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+.amount-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.amount-value {
+  font-family: var(--font-mono);
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--emerald);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.amount-value.coral {
+  color: var(--coral);
+}
+
+.amount-value.emerald {
+  color: var(--emerald);
+}
+
+/* Keyboard hint badge */
+.keyboard-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.keyboard-hint kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--border-light);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
