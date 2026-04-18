@@ -6,6 +6,27 @@
   <title>HisaabPro — ML Revenue Forecast</title>
   <meta name="description" content="30-day AI revenue forecast for your kiryana store powered by Facebook Prophet." />
   <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    /* ── Forecast status message (cold-start / error) ── */
+    #forecast-status {
+      display: none;
+      margin: 12px 0;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: Manrope, sans-serif;
+    }
+    .forecast-status-error {
+      background: #fef2f2;
+      border: 1px solid #fca5a5;
+      color: #dc2626;
+    }
+
+    /* ── Subtle fade while chart reloads ── */
+    #forecast-chart-wrapper {
+      transition: opacity 0.3s ease;
+    }
+  </style>
 </head>
 <body>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
@@ -31,13 +52,15 @@
         <button class="mobile-menu-btn" id="menuBtn"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="header-left">
           <div class="header-title">Revenue Forecast</div>
-          <div class="header-subtitle">Powered by Facebook Prophet · 82.3% accuracy (MAPE)</div>
+          <!-- ↓ Updated dynamically by forecast.js -->
+          <div class="header-subtitle">Powered by Facebook Prophet · Loading…</div>
         </div>
       </div>
       <div class="header-right">
         <span class="chip chip-lime">Model Health: Good</span>
         <span class="header-date-chip" id="currentDate"></span>
-        <button class="btn btn-secondary btn-sm">
+        <!-- ↓ id added so forecast.js can wire up the click handler -->
+        <button class="btn btn-secondary btn-sm" id="rerun-btn">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           Re-run Model
         </button>
@@ -45,21 +68,21 @@
     </header>
 
     <main class="page-content">
-      <!-- KPI Row -->
+      <!-- KPI Row — values updated by forecast.js -->
       <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">
         <div class="kpi-card" style="background:var(--lime-light);border-color:#d9f99d">
           <div class="kpi-label">Predicted Revenue (7d)</div>
-          <div class="kpi-value lime">52,400</div>
+          <div class="kpi-value lime">—</div>
           <div class="kpi-change" style="color:var(--lime);margin-top:4px">PKR · Forecast mid-point</div>
         </div>
         <div class="kpi-card" style="background:var(--emerald-light);border-color:var(--emerald-border)">
           <div class="kpi-label">Best Case (Upper)</div>
-          <div class="kpi-value emerald">61,200</div>
+          <div class="kpi-value emerald">—</div>
           <div class="kpi-change up">Upper confidence bound</div>
         </div>
         <div class="kpi-card" style="background:var(--coral-light);border-color:#fca5a5">
           <div class="kpi-label">Worst Case (Lower)</div>
-          <div class="kpi-value coral">43,600</div>
+          <div class="kpi-value coral">—</div>
           <div class="kpi-change down">Lower confidence bound</div>
         </div>
       </div>
@@ -78,7 +101,12 @@
               <span class="filter-chip" data-group="fc-range">90D</span>
             </div>
           </div>
-          <div class="chart-container" style="height:320px">
+
+          <!-- ↓ Status message shown on error or cold-start -->
+          <p id="forecast-status"></p>
+
+          <!-- ↓ id added so forecast.js can fade it during loading -->
+          <div id="forecast-chart-wrapper" class="chart-container" style="height:320px">
             <canvas id="forecastChart"></canvas>
           </div>
         </div>
@@ -109,10 +137,13 @@
             </div>
           </div>
 
-          <!-- Model Notes -->
+          <!-- Model Notes — text updated dynamically by forecast.js -->
           <div class="card card-p" style="background:var(--lime-light);border-left:3px solid var(--lime);border-radius:var(--radius-md)">
             <div class="card-title" style="color:var(--lime);margin-bottom:8px">Model Notes</div>
-            <div class="text-sm text-secondary" style="line-height:1.6">Based on <strong>47 historical data points</strong>. Handles weekly &amp; monthly seasonality. Model accuracy improves with more entries.</div>
+            <!-- ↓ id added so forecast.js can update this text -->
+            <div class="text-sm text-secondary" style="line-height:1.6" id="model-notes-text">
+              Loading model data…
+            </div>
             <div class="alert alert-warning" style="margin-top:10px;margin-bottom:0;font-size:12px">New users: Forecast improves significantly after 30+ logged entries.</div>
           </div>
         </div>
@@ -147,8 +178,9 @@
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="assets/js/store.js"></script>
 <script src="assets/js/main.js"></script>
 <script src="assets/js/charts.js"></script>
+<!-- ↓ forecast.js must load AFTER charts.js since it calls renderForecastChart() -->
+<script src="assets/js/forecast.js"></script>
 </body>
 </html>
