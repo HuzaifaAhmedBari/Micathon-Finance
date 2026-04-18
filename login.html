@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HisaabPro — Login</title>
+  <meta name="description" content="Login to HisaabPro — Smart Cash Flow for Kiryana Stores." />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+<div class="auth-layout">
+  <!-- Visual Panel -->
+  <div class="auth-visual">
+    <div class="auth-brand">
+      <div class="auth-brand-icon">H</div>
+      <span class="auth-brand-name">HisaabPro</span>
+    </div>
+    <h1 class="auth-headline">Your store's crystal ball — finally.</h1>
+    <p class="auth-subtext">Empowering 3.6 million kiryana store owners in Pakistan with professional-grade financial visibility. As easy as sending a WhatsApp message.</p>
+    <div class="auth-stats">
+      <div>
+        <div class="auth-stat-value">3.6M</div>
+        <div class="auth-stat-label">Kiryana Stores</div>
+      </div>
+      <div>
+        <div class="auth-stat-value">60s</div>
+        <div class="auth-stat-label">To First Entry</div>
+      </div>
+      <div>
+        <div class="auth-stat-value">30d</div>
+        <div class="auth-stat-label">Revenue Forecast</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Form Panel -->
+  <div class="auth-form-panel">
+    <div style="max-width:400px;margin:0 auto;width:100%">
+      <h1 class="auth-form-title">Welcome back</h1>
+      <p class="auth-form-subtitle">Sign in to your HisaabPro account</p>
+
+      <form onsubmit="event.preventDefault(); window.location='index.html'">
+        <div class="form-group">
+          <label class="form-label" for="email">Email address <span>*</span></label>
+          <div class="input-group">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <input type="email" id="email" class="form-input" placeholder="imran@kiryana.pk" required autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password <span>*</span></label>
+          <div class="input-group">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <input type="password" id="password" class="form-input" placeholder="••••••••" required autocomplete="current-password" />
+            <span class="input-suffix toggle-password">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center" style="margin-bottom:24px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);cursor:pointer">
+            <input type="checkbox" style="accent-color:var(--emerald);width:15px;height:15px" />
+            Remember me
+          </label>
+          <a href="#" style="font-size:13px;color:var(--emerald);font-weight:600">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-pill-lg">Sign In</button>
+      </form>
+
+      <p class="auth-footer-text">
+        Don't have an account? <a href="register.html">Create one free</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
