@@ -3,6 +3,21 @@
 // =========================================
 
 const HP = (() => {
+  function parseDateKey(value) {
+    const key = String(value || '').slice(0, 10);
+    const [y, m, d] = key.split('-').map(Number);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null;
+    return new Date(y, m - 1, d);
+  }
+
+  function currentLocalDateKey() {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
   function getSupabaseClient() {
     if (!window.supabase) return null;
     const config = window.supabase._config || {};
@@ -317,9 +332,13 @@ const HP = (() => {
   async function getSummary(days = 30) {
     const txns = await getTransactions();
     const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
     cutoff.setDate(cutoff.getDate() - days);
     
-    const recentTxns = txns.filter(t => new Date(t.date) >= cutoff);
+    const recentTxns = txns.filter(t => {
+      const txnDate = parseDateKey(t.date);
+      return txnDate ? txnDate >= cutoff : false;
+    });
     const totalIncome   = recentTxns.filter(t => t.type === 'sale').reduce((s, t) => s + t.amount, 0);
     const totalExpenses = recentTxns.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
     return { totalIncome, totalExpenses, netBalance: totalIncome - totalExpenses, count: recentTxns.length };
@@ -327,7 +346,7 @@ const HP = (() => {
 
   async function getTodaySummary() {
     const txns = await getTransactions();
-    const today = new Date().toISOString().split('T')[0];
+    const today = currentLocalDateKey();
     
     const todayTxns = txns.filter(t => t.date === today);
     const sales    = todayTxns.filter(t => t.type === 'sale').reduce((s, t) => s + t.amount, 0);
@@ -338,9 +357,14 @@ const HP = (() => {
   async function getCategoryBreakdown(days = 30) {
     const txns = await getTransactions();
     const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
     cutoff.setDate(cutoff.getDate() - days);
     
-    const recentTxns = txns.filter(t => t.type === 'expense' && new Date(t.date) >= cutoff);
+    const recentTxns = txns.filter(t => {
+      if (t.type !== 'expense') return false;
+      const txnDate = parseDateKey(t.date);
+      return txnDate ? txnDate >= cutoff : false;
+    });
     const totals = {};
     recentTxns.forEach(t => {
       totals[t.category] = (totals[t.category] || 0) + t.amount;

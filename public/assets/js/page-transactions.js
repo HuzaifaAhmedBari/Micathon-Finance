@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('kpiIncome').textContent   = summary.totalIncome.toLocaleString('en-PK');
     document.getElementById('kpiExpenses').textContent = summary.totalExpenses.toLocaleString('en-PK');
     const net = summary.netBalance;
-    document.getElementById('kpiNet').textContent = Math.abs(net).toLocaleString('en-PK');
+    document.getElementById('kpiNet').textContent = `${net < 0 ? '-' : ''}${Math.abs(net).toLocaleString('en-PK')}`;
     if (net < 0) {
       document.getElementById('kpiNet').className = 'kpi-value coral';
       document.getElementById('kpiNetLabel').innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>Net loss this month`;
