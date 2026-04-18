@@ -206,8 +206,12 @@
     <div class="form-group">
       <label class="form-label" for="newItemCategory">Category *</label>
       <select id="newItemCategory" class="form-input">
-        <option>Dry Goods</option><option>Dairy</option><option>Oils</option>
-        <option>Beverages</option><option>Hygiene</option><option>Bakery</option><option>Misc</option>
+        <option>Grocery</option>
+        <option>Dairy</option>
+        <option>Bakery</option>
+        <option>Beverages</option>
+        <option>Electronics</option>
+        <option>Others</option>
       </select>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -217,7 +221,15 @@
       </div>
       <div class="form-group">
         <label class="form-label" for="newItemUnit">Unit *</label>
-        <input type="text" id="newItemUnit" class="form-input" placeholder="kg, L, pcs..." />
+        <select id="newItemUnit" class="form-input">
+          <option>kg</option>
+          <option>g</option>
+          <option>L</option>
+          <option>ml</option>
+          <option>pcs</option>
+          <option>box</option>
+          <option>dozen</option>
+        </select>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
@@ -226,13 +238,19 @@
         <input type="number" id="newItemCost" class="form-input" min="0" placeholder="0" />
       </div>
       <div class="form-group">
-        <label class="form-label" for="newItemMax">Max Qty</label>
-        <input type="number" id="newItemMax" class="form-input" min="1" placeholder="20" />
+        <label class="form-label" for="newItemSale">Sale Price (PKR) *</label>
+        <input type="number" id="newItemSale" class="form-input" min="0" placeholder="0" />
       </div>
     </div>
-    <div class="form-group">
-      <label class="form-label" for="newItemThreshold">Low Stock Threshold</label>
-      <input type="number" id="newItemThreshold" class="form-input" min="0" placeholder="5" />
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-group">
+        <label class="form-label" for="newItemMax">Max Qty</label>
+        <input type="number" id="newItemMax" class="form-input" min="1" placeholder="Auto" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="newItemThreshold">Low Stock Threshold</label>
+        <input type="number" id="newItemThreshold" class="form-input" min="0" placeholder="Auto (15%)" />
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" id="cancelAddItem">Cancel</button>

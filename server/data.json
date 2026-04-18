@@ -1,1 +1,158 @@
-{"transactions":[],"inventory":[]}
+{
+  "transactions": [
+    {
+      "date": "2026-04-18",
+      "description": "Egg",
+      "category": "Dairy",
+      "type": "sale",
+      "amount": 19200,
+      "unit": "dozen",
+      "notes": "-160 dozen",
+      "inventoryItemId": "inv_1776496477830",
+      "inventoryQtyChange": 160,
+      "isUtility": false,
+      "id": "txn_1776499397466"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Egg",
+      "category": "Dairy",
+      "type": "sale",
+      "amount": 1080,
+      "unit": "dozen",
+      "notes": "-9 dozen",
+      "inventoryItemId": "inv_1776496477830",
+      "inventoryQtyChange": 9,
+      "isUtility": false,
+      "id": "txn_1776499382046"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Egg",
+      "category": "Dairy",
+      "type": "sale",
+      "amount": 1080,
+      "unit": "dozen",
+      "notes": "-9 dozen",
+      "inventoryItemId": "inv_1776496477830",
+      "inventoryQtyChange": 108,
+      "isUtility": false,
+      "id": "txn_1776499280048"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Egg",
+      "category": "Dairy",
+      "type": "sale",
+      "amount": 1200,
+      "unit": "dozen",
+      "notes": "-10 dozen",
+      "inventoryItemId": "inv_1776496477830",
+      "inventoryQtyChange": 120,
+      "isUtility": false,
+      "id": "txn_1776499181562"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Egg",
+      "category": "Dairy",
+      "type": "sale",
+      "amount": 23880,
+      "unit": "dozen",
+      "notes": "-199 dozen",
+      "inventoryItemId": "inv_1776496477830",
+      "inventoryQtyChange": 2388,
+      "isUtility": false,
+      "id": "txn_1776498997970"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Egg",
+      "category": "Dairy",
+      "type": "sale",
+      "amount": 120,
+      "unit": "dozen",
+      "notes": "-1 dozen",
+      "inventoryItemId": "inv_1776496477830",
+      "inventoryQtyChange": 12,
+      "isUtility": false,
+      "id": "txn_1776498977817"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Egg",
+      "category": "Dairy",
+      "type": "sale",
+      "amount": 240,
+      "unit": "dozen",
+      "notes": "-2 dozen",
+      "inventoryItemId": "inv_1776496477830",
+      "inventoryQtyChange": 24,
+      "isUtility": false,
+      "id": "txn_1776498785490"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Egg",
+      "category": "Dairy",
+      "type": "sale",
+      "amount": 24000,
+      "unit": "dozen",
+      "notes": "-200 dozen",
+      "inventoryItemId": "inv_1776496477830",
+      "inventoryQtyChange": 2400,
+      "isUtility": false,
+      "id": "txn_1776498580481"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Egg",
+      "category": "Dairy",
+      "type": "sale",
+      "amount": 2160,
+      "unit": "dozen",
+      "notes": "-18 dozen",
+      "inventoryItemId": "inv_1776496477830",
+      "inventoryQtyChange": 216,
+      "isUtility": false,
+      "id": "txn_1776498565112"
+    },
+    {
+      "date": "2026-04-18",
+      "description": "Rice",
+      "category": "Grocery",
+      "type": "sale",
+      "amount": 142,
+      "unit": "kg",
+      "notes": "Discounted",
+      "inventoryItemId": "inv_1776496799608",
+      "inventoryQtyChange": 3,
+      "isUtility": false,
+      "id": "txn_1776497848261"
+    }
+  ],
+  "inventory": [
+    {
+      "name": "Egg",
+      "category": "Dairy",
+      "qty": 11,
+      "unit": "dozen",
+      "costPrice": 120,
+      "salePrice": 120,
+      "maxQty": 20,
+      "lowThreshold": 5,
+      "id": "inv_1776496477830"
+    },
+    {
+      "name": "Rice",
+      "category": "Grocery",
+      "qty": 100,
+      "unit": "kg",
+      "costPrice": 200,
+      "salePrice": 220,
+      "maxQty": 20,
+      "lowThreshold": 5,
+      "id": "inv_1776496799608"
+    }
+  ]
+}

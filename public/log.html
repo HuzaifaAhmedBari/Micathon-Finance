@@ -145,7 +145,7 @@
         </div>
         <div class="header-right">
           <span class="header-date-chip" id="currentDate"></span>
-          <a href="inventory.html" class="btn btn-primary btn-sm">
+          <a href="inventory.html?action=add-item" class="btn btn-primary btn-sm">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
             Add Item
           </a>
@@ -163,28 +163,6 @@
             <div class="toggle-btn" data-type="expense" id="expenseBtn">
               − Kharcha (Expense)
             </div>
-          </div>
-
-          <!-- Amount Display -->
-          <div class="amount-display">
-            <div class="amount-label">Enter Amount</div>
-            <div class="amount-value" id="amountDisplay">PKR 0</div>
-          </div>
-
-          <!-- Numpad -->
-          <div class="numpad">
-            <button class="numpad-key" data-val="1">1</button>
-            <button class="numpad-key" data-val="2">2</button>
-            <button class="numpad-key" data-val="3">3</button>
-            <button class="numpad-key" data-val="4">4</button>
-            <button class="numpad-key" data-val="5">5</button>
-            <button class="numpad-key" data-val="6">6</button>
-            <button class="numpad-key" data-val="7">7</button>
-            <button class="numpad-key" data-val="8">8</button>
-            <button class="numpad-key" data-val="9">9</button>
-            <button class="numpad-key" data-val=".">.</button>
-            <button class="numpad-key key-zero" data-val="0">0</button>
-            <button class="numpad-key key-back" data-val="back">⌫</button>
           </div>
 
           <div style="margin-top:24px">
@@ -209,6 +187,25 @@
               </div>
             </div>
 
+            <!-- Category Chips -->
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <div class="filter-row" style="flex-wrap:wrap" id="categoryChips">
+                <span class="filter-chip active" data-group="cat" data-type="all">All</span>
+                <!-- Sale Categories -->
+                <span class="filter-chip" data-group="cat" data-type="sale">Grocery</span>
+                <span class="filter-chip" data-group="cat" data-type="sale">Dairy</span>
+                <span class="filter-chip" data-group="cat" data-type="sale">Bakery</span>
+                <span class="filter-chip" data-group="cat" data-type="sale">Beverages</span>
+                <span class="filter-chip" data-group="cat" data-type="sale">Electronics</span>
+                <span class="filter-chip" data-group="cat" data-type="sale">Others</span>
+                <!-- Expense Categories -->
+                <span class="filter-chip" data-group="cat" data-type="expense">Utilities</span>
+                <span class="filter-chip" data-group="cat" data-type="expense">Stock</span>
+                <span class="filter-chip" data-group="cat" data-type="expense">Misc</span>
+              </div>
+            </div>
+
             <!-- Quantity row (for restock) -->
             <div class="qty-row form-group" id="qtyRow">
               <div class="qty-field">
@@ -217,19 +214,14 @@
               </div>
               <div class="qty-field">
                 <label class="form-label" id="qtyUnitLabel">Unit</label>
-                <input type="text" id="qtyUnitInput" class="form-input" readonly placeholder="unit" />
+                <input type="text" id="qtyUnitInput" class="form-input" readonly disabled placeholder="unit" style="background-color: var(--canvas); color: var(--text-muted); cursor: not-allowed; border-color: var(--border);" />
               </div>
             </div>
 
-            <!-- Category Chips -->
-            <div class="form-group">
-              <label class="form-label">Category</label>
-              <div class="filter-row" style="flex-wrap:wrap" id="categoryChips">
-                <span class="filter-chip active" data-group="cat">All</span>
-                <span class="filter-chip" data-group="cat">Utilities</span>
-                <span class="filter-chip" data-group="cat">Stock</span>
-                <span class="filter-chip" data-group="cat">Misc</span>
-              </div>
+            <!-- Amount Input -->
+            <div class="amount-display" style="gap:12px; align-items:flex-start; flex-direction:column; margin-bottom:24px;">
+              <div class="amount-label" id="amountLabel">Total Amount (PKR) *</div>
+              <input type="number" id="amountInput" class="form-input amount-value" placeholder="0" style="width:100%; text-align:left; font-size:24px; font-weight:700; height:60px;" />
             </div>
 
             <!-- Date -->

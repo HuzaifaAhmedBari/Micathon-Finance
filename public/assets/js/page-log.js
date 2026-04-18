@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await HP.init();
 
   // ── State ──────────────────────────────────────────────────────
-  let rawValue = '';
   let currentType = 'sale';   // 'sale' | 'expense'
   let selectedItem = null;    // { id, name, category, type, inventoryItemId?, unit? }
 
@@ -11,42 +10,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dateInput = document.getElementById('entryDate');
   dateInput.value = new Date().toISOString().split('T')[0];
 
-  // ── Numpad ─────────────────────────────────────────────────────
-  function updateDisplay() {
-    const num = rawValue === '' ? 0 : parseFloat(rawValue);
-    document.getElementById('amountDisplay').textContent =
-      'PKR ' + (isNaN(num) ? '0' : num.toLocaleString('en-PK'));
-  }
-
-  function handleNumpad(val) {
-    if (val === 'back') { rawValue = rawValue.slice(0, -1); }
-    else if (val === '.') { if (!rawValue.includes('.')) rawValue += '.'; }
-    else {
-      if (rawValue.length >= 9) return;
-      if (rawValue === '0') rawValue = val; else rawValue += val;
-    }
-    updateDisplay();
-  }
-
-  document.querySelectorAll('.numpad-key').forEach(btn =>
-    btn.addEventListener('click', () => handleNumpad(btn.dataset.val))
-  );
-
-  // Keyboard
-  document.addEventListener('keydown', (e) => {
-    const tag = document.activeElement.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
-    let val = null;
-    if (e.key >= '0' && e.key <= '9') val = e.key;
-    else if (e.key === '.') val = '.';
-    else if (e.key === 'Backspace') val = 'back';
-    else if (e.key === 'Enter') { document.getElementById('submitBtn')?.click(); return; }
-    if (val !== null) {
-      e.preventDefault(); handleNumpad(val);
-      const key = document.querySelector(`.numpad-key[data-val="${val}"]`);
-      if (key) { key.classList.add('key-pressed'); setTimeout(() => key.classList.remove('key-pressed'), 120); }
-    }
-  });
+  const amountInput = document.getElementById('amountInput');
 
   // ── Category Chips ─────────────────────────────────────────────
   function setCategory(cat) {
@@ -68,8 +32,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active-emerald', 'active-coral'));
     const btn = document.querySelector(`.toggle-btn[data-type="${type}"]`);
     if(btn) btn.classList.add(type === 'expense' ? 'active-coral' : 'active-emerald');
-    const amountEl = document.getElementById('amountDisplay');
-    amountEl.className = 'amount-value ' + (type === 'expense' ? 'coral' : 'emerald');
+    
+    // Switch input highlighting color
+    amountInput.style.color = type === 'expense' ? 'var(--coral)' : 'var(--emerald)';
+    
     const submitBtn = document.getElementById('submitBtn');
     if (type === 'expense') {
       submitBtn.textContent = 'Save Kharcha (Expense)';
@@ -79,10 +45,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       submitBtn.className = 'btn btn-pill-lg btn-primary';
     }
     
-    // Hide Utilities and Misc when on Sale
+    // Hide/Show correct category chips based on their data-type
     document.querySelectorAll('.filter-chip[data-group="cat"]').forEach(c => {
-      if (c.textContent === 'Utilities' || c.textContent === 'Misc') {
-        c.style.display = type === 'sale' ? 'none' : 'inline-flex';
+      if (c.dataset.type === 'all') {
+         c.style.display = 'inline-flex';
+      } else {
+         c.style.display = c.dataset.type === type ? 'inline-flex' : 'none';
       }
     });
     setCategory('All');
@@ -108,19 +76,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function buildPickerList(query) {
     pickerList.innerHTML = '';
     const q = query.toLowerCase().trim();
-    const activeChip = document.querySelector('.filter-chip[data-group="cat"].active')?.textContent || 'All';
+    const activeCatNode = document.querySelector('.filter-chip[data-group="cat"].active');
+    const activeChip = activeCatNode ? activeCatNode.textContent : 'All';
     const inventory = await HP.getInventory();
 
     if (currentType === 'sale') {
-      if (activeChip === 'All' || activeChip === 'Stock') {
-        const filteredInv = q ? inventory.filter(i => i.name.toLowerCase().includes(q)) : inventory;
-        if (filteredInv.length) {
-          addSection('Sell Inventory Item');
-          filteredInv.forEach(i => addPickerItem({
-            id: 'inv_sale_' + i.id, name: i.name, category: i.category,
-            type: 'sale', badge: 'sale', inventoryItemId: i.id, unit: i.unit
-          }));
-        }
+      // Show products filtered by category if applicable
+      const filteredByCategory = activeChip === 'All' ? inventory : inventory.filter(i => i.category === activeChip);
+      const filteredInv = q ? filteredByCategory.filter(i => i.name.toLowerCase().includes(q)) : filteredByCategory;
+      
+      if (filteredInv.length) {
+        addSection('Sell Inventory Item');
+        filteredInv.forEach(i => addPickerItem({
+          id: 'inv_sale_' + i.id, name: i.name, category: i.category,
+          type: 'sale', badge: 'sale', inventoryItemId: i.id, unit: i.unit
+        }));
       }
     } else {
       const presets = HP.UTILITY_PRESETS;
@@ -147,7 +117,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
 
       if (activeChip === 'All' || activeChip === 'Stock') {
-        const filteredInv = q ? inventory.filter(i => i.name.toLowerCase().includes(q)) : inventory;
+        const filteredByCategory = activeChip === 'Stock' ? inventory : inventory;
+        const filteredInv = q ? filteredByCategory.filter(i => i.name.toLowerCase().includes(q)) : filteredByCategory;
         if (filteredInv.length) {
           addSection('Inventory Restock');
           filteredInv.forEach(i => addPickerItem({
@@ -190,25 +161,73 @@ document.addEventListener('DOMContentLoaded', async () => {
     pickerLabel.classList.remove('placeholder');
     closePicker();
 
-    setCategory(item.category);
-    if (!document.querySelector('.filter-chip[data-group="cat"].active')) {
-      setCategory('All');
+    const activeCatNode = document.querySelector('.filter-chip[data-group="cat"].active');
+    if (activeCatNode && activeCatNode.dataset.type === 'all') {
+      // Keep 'All' category active
+    } else {
+      setCategory(item.category);
+      if (!document.querySelector('.filter-chip[data-group="cat"].active')) {
+        setCategory('All');
+      }
     }
 
+    // Hide or Show quantity row based on item type
     if (item.badge === 'restock' || item.badge === 'sale') {
       qtyRow.classList.add('visible');
       document.getElementById('qtyInputLabel').textContent = item.badge === 'sale' ? 'Quantity Sold' : 'Quantity Restocked';
       qtyUnitInput.value = item.unit || '';
+      qtyInput.value = '1'; // Default to 1
+      
+      // Auto-calculate logic
+      updateCalculatedAmount();
     } else {
       qtyRow.classList.remove('visible');
+      qtyInput.value = '';
+      
+      // Allow manual entry for Utilities/Misc; clear the existing amount
+      amountInput.value = '';
+      document.getElementById('amountLabel').textContent = 'Enter Amount (PKR) *';
+      
+      const pi = document.getElementById('priceIndicator');
+      if (pi) pi.remove();
     }
   }
+
+  async function updateCalculatedAmount() {
+    if (!selectedItem || !selectedItem.inventoryItemId) return;
+    
+    const inventory = await HP.getInventory();
+    const invItem = inventory.find(i => i.id === selectedItem.inventoryItemId);
+    if (!invItem) return;
+
+    const qty = parseFloat(qtyInput.value) || 0;
+    const price = currentType === 'sale' ? (invItem.salePrice || 0) : (invItem.costPrice || 0);
+    const total = qty * price;
+    
+    amountInput.value = total;
+    
+    // Add a price indicator if not already there
+    let priceIndicator = document.getElementById('priceIndicator');
+    if (!priceIndicator) {
+        priceIndicator = document.createElement('div');
+        priceIndicator.id = 'priceIndicator';
+        priceIndicator.style = 'font-size: 11px; color: var(--text-muted); text-align: center; margin-top: -16px; margin-bottom: 20px;';
+        document.querySelector('.amount-display').after(priceIndicator);
+    }
+    priceIndicator.textContent = `Unit Price: ${price.toLocaleString('en-PK')} per ${invItem.unit} × ${qty} ${invItem.unit} (You can override this below)`;
+  }
+
+  qtyInput.addEventListener('input', updateCalculatedAmount);
 
   function resetPicker() {
     selectedItem = null;
     pickerLabel.textContent = 'Select an item or utility...';
     pickerLabel.classList.add('placeholder');
     qtyRow.classList.remove('visible');
+    amountInput.value = '';
+    
+    const pi = document.getElementById('priceIndicator');
+    if (pi) pi.remove();
   }
 
   async function openPicker() {
@@ -248,8 +267,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Submit ─────────────────────────────────────────────────────
   document.getElementById('submitBtn').addEventListener('click', async () => {
-    const amount = parseFloat(rawValue);
-    if (!amount || amount <= 0) { showToast('Please enter an amount', 'error'); return; }
+    const amount = parseFloat(amountInput.value);
+    if ((!amount || amount <= 0) && (!selectedItem || !selectedItem.inventoryItemId)) { 
+        showToast('Please enter an amount', 'error'); return; 
+    }
     if (!selectedItem) { showToast('Please select an item', 'error'); return; }
 
     const activeCatNode = document.querySelector('.filter-chip[data-group="cat"].active')?.textContent;
@@ -258,12 +279,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const notesVal = document.getElementById('notes').value.trim();
     const qty = parseFloat(qtyInput.value) || 0;
 
+    // Verify Stock Availability Before Sale
+    if (currentType === 'sale' && selectedItem && selectedItem.inventoryItemId) {
+      const inventory = await HP.getInventory();
+      const invItem = inventory.find(i => i.id === selectedItem.inventoryItemId);
+      if (invItem && qty > invItem.qty) {
+        showToast(`Not enough stock! Only ${invItem.qty} ${invItem.unit} remaining.`, 'error');
+        return;
+      }
+    }
+
     const txn = {
       date: dateInput.value,
       description: selectedItem.name.replace(' (Restock)', ''),
       category: activeCategory,
       type: currentType,
       amount,
+      unit: selectedItem.unit || 'pcs', 
       notes: notesVal || (qty > 0 ? (currentType === 'sale' ? `-${qty} ${qtyUnitInput.value}` : `+${qty} ${qtyUnitInput.value}`) : ''),
       inventoryItemId: selectedItem.inventoryItemId || null,
       inventoryQtyChange: (['restock', 'sale'].includes(selectedItem.badge) && qty > 0) ? qty : null,
@@ -273,16 +305,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     await HP.addTransaction(txn);
     showToast(`✓ ${txn.description} saved!`, 'success');
 
-    rawValue = '';
-    updateDisplay();
     resetPicker();
     await buildPickerList('');
     qtyInput.value = '';
     document.getElementById('notes').value = '';
     dateInput.value = new Date().toISOString().split('T')[0];
     setCategory('All');
-
-    setTimeout(() => { window.location.href = 'transactions.html'; }, 1200);
   });
 
   // ── Toast ──────────────────────────────────────────────────────

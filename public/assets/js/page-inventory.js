@@ -113,7 +113,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           <td><strong>${i.name}</strong></td>
           <td><span class="chip chip-neutral" style="font-size:11px">${i.category}</span></td>
           <td class="td-mono ${qtyColor}" ${qtyStyle} style="text-align:right" id="qty-cell-${i.id}">${i.qty} ${i.unit}</td>
-          <td class="td-mono" style="text-align:right">${i.costPrice.toLocaleString('en-PK')}</td>
+          <td class="td-mono" style="text-align:right">
+            <div style="font-size:12px; color:var(--text-primary)">S: ${i.salePrice.toLocaleString('en-PK')}</div>
+            <div style="font-size:10px; color:var(--text-muted)">C: ${i.costPrice.toLocaleString('en-PK')}</div>
+          </td>
           <td><span class="badge ${badgeClass}">${badgeLabel}</span></td>
           <td style="width:100px"><div class="progress-bar-wrap" style="margin-top:0"><div class="progress-bar-fill ${barClass}" style="width:${pct}%"></div></div></td>
           <td>
@@ -209,17 +212,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     const qty = parseFloat(document.getElementById('newItemQty').value) || 0;
     const unit = document.getElementById('newItemUnit').value.trim();
     const costPrice = parseFloat(document.getElementById('newItemCost').value) || 0;
-    const maxQty = parseFloat(document.getElementById('newItemMax').value) || 20;
-    const lowThreshold = parseFloat(document.getElementById('newItemThreshold').value) || 5;
+    const salePrice = parseFloat(document.getElementById('newItemSale').value) || 0;
+    
+    let maxQty = parseFloat(document.getElementById('newItemMax').value);
+    if (isNaN(maxQty)) {
+      maxQty = Math.max(20, qty * 2); // Default to double the starting qty, or at least 20
+    }
+    
+    let lowThreshold = parseFloat(document.getElementById('newItemThreshold').value);
+    if (isNaN(lowThreshold)) {
+      lowThreshold = Math.max(1, Math.round(maxQty * 0.15)); // Automatically set to 15% of Max Qty
+    }
 
     if (!name || !unit) { alert('Please fill in item name and unit.'); return; }
 
-    await HP.addInventoryItem({ name, category, qty, unit, costPrice, maxQty, lowThreshold });
+    await HP.addInventoryItem({ name, category, qty, unit, costPrice, salePrice, maxQty, lowThreshold });
     modal.classList.remove('open');
     // Clear form
-    ['newItemName','newItemQty','newItemUnit','newItemCost','newItemMax','newItemThreshold'].forEach(id => {
-      document.getElementById(id).value = '';
+    ['newItemName','newItemCategory','newItemQty','newItemUnit','newItemCost','newItemSale','newItemMax','newItemThreshold'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
     });
+    if (saleInput) saleInput.dataset.autoFilled = 'true';
     await refreshAll();
   });
 
@@ -232,4 +246,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   await refreshAll();
+
+  // ── Auto-fill Sale Price logic ─────────────────────────────────
+  const costInput = document.getElementById('newItemCost');
+  const saleInput = document.getElementById('newItemSale');
+  if (costInput && saleInput) {
+    costInput.addEventListener('input', () => {
+      // Auto-fill sale price if it's empty OR if it was previously auto-filled
+      if (!saleInput.value || saleInput.dataset.autoFilled === 'true') {
+        saleInput.value = costInput.value;
+        saleInput.dataset.autoFilled = 'true';
+      }
+    });
+
+    // If user manually edits sale price, stop the auto-fill behavior
+    saleInput.addEventListener('input', () => {
+      saleInput.dataset.autoFilled = 'false';
+    });
+  }
+
+  // ── Auto-open Add Item logic ───────────────────────────────────
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('action') === 'add-item') {
+    modal.classList.add('open');
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 });

@@ -19,6 +19,8 @@ router.post('/transactions', (req, res) => {
   
   txn.id = 'txn_' + Date.now();
   
+  // No dozen multiplier needed here anymore because dozen items are converted to 'pcs' during inventory creation
+
   // Implicit Inventory Creation for Misc Expenses
   if (txn.type === 'expense' && txn.category === 'Misc' && !txn.inventoryItemId) {
     const invItem = {
@@ -28,6 +30,7 @@ router.post('/transactions', (req, res) => {
       qty: txn.inventoryQtyChange || 1,
       unit: 'pcs',
       costPrice: txn.inventoryQtyChange ? (txn.amount / txn.inventoryQtyChange) : txn.amount,
+      salePrice: txn.inventoryQtyChange ? (txn.amount / txn.inventoryQtyChange) * 1.2 : txn.amount * 1.2, // Default 20% markup
       maxQty: parseInt(txn.inventoryQtyChange || 1) * 2 || 10,
       lowThreshold: 2
     };
@@ -39,10 +42,15 @@ router.post('/transactions', (req, res) => {
   data.transactions.unshift(txn);
 
   // If it's an inventory restock, update inventory qty
-  if (txn.inventoryItemId && txn.inventoryQtyChange) {
+  if (txn.inventoryItemId && txn.inventoryQtyChange && txn.type === 'expense') {
     const item = data.inventory.find(i => i.id === txn.inventoryItemId);
     if (item) {
       item.qty = Math.max(0, item.qty + txn.inventoryQtyChange);
+      
+      // Auto-expand maxQty so progress bars and logic adapt organically
+      if (item.maxQty && item.qty > item.maxQty) {
+        item.maxQty = item.qty;
+      }
     }
   }
 
@@ -75,6 +83,19 @@ router.post('/inventory', (req, res) => {
   const item = req.body;
   const data = db.readData();
   
+  // Dozen multiplier logic
+  if (item.unit === 'dozen') {
+    item.qty = (item.qty || 0) * 12;
+    
+    // Scale prices and thresholds dynamically to reflect partials (pieces)
+    if (item.costPrice) item.costPrice = item.costPrice / 12;
+    if (item.salePrice) item.salePrice = item.salePrice / 12;
+    if (item.maxQty) item.maxQty = item.maxQty * 12;
+    if (item.lowThreshold) item.lowThreshold = item.lowThreshold * 12;
+
+    item.unit = 'pcs';
+  }
+
   item.id = 'inv_' + Date.now();
   data.inventory.push(item);
   
