@@ -2,13 +2,34 @@
 // HisaabPro — ML Forecast Integration
 // =========================================
 
-const ML_API = "http://127.0.0.1:8000"; // ← swap to Render URL when deploying
+const ML_API = "http://127.0.0.1:5000"; // ← swap to Render URL when deploying
 
 // ---- Warm up Render on page load (avoids cold-start delay when user clicks) ----
 fetch(`${ML_API}/health`).catch(() => {});
 
-// ---- Fetch sales history from Supabase ----
-async function getSalesHistory() {
+// ---- Fetch sales history from Local Node.js Backend ----
+async function getSalesHistoryLocal() {
+  try {
+    const response = await fetch('/api/transactions');
+    if (!response.ok) throw new Error('Failed to fetch transactions');
+    
+    const transactions = await response.json();
+    // Filter only sales and expenses with amounts
+    return transactions
+      .filter(t => (t.type === 'sale' || t.type === 'expense') && t.amount > 0)
+      .map(t => ({
+        date: t.date,
+        amount: t.amount
+      }));
+  } catch (error) {
+    console.error('Local API error:', error);
+    return null;
+  }
+}
+
+// ---- Fetch sales history from Supabase (COMMENTED OUT - kept for future migration) ----
+/*
+async function getSalesHistorySupabase() {
   const { data, error } = await supabase
     .from("sales_entries")
     .select("amount, created_at")
@@ -20,13 +41,21 @@ async function getSalesHistory() {
   }
   return data;
 }
+*/
+
+// ---- Main data fetcher - switches between local and Supabase ----
+// For now, uses local backend. Uncomment Supabase version when migrating.
+async function getSalesHistory() {
+  return getSalesHistoryLocal();
+  // return getSalesHistorySupabase(); // ← Uncomment to use Supabase
+}
 
 // ---- Aggregate individual entries into daily totals ----
-// Supabase returns one row per transaction; Prophet needs one row per day
+// Local backend returns date in "YYYY-MM-DD"; Prophet needs one row per day
 function aggregateByDay(entries) {
   const map = {};
   entries.forEach(e => {
-    const date = e.created_at.slice(0, 10); // "YYYY-MM-DD"
+    const date = e.date; // Already in "YYYY-MM-DD" format
     map[date] = (map[date] || 0) + e.amount;
   });
   return Object.entries(map)
@@ -115,7 +144,7 @@ async function loadForecast() {
   hideStatus();
 
   try {
-    // 1. Get raw entries from Supabase
+    // 1. Get raw entries from local backend (or Supabase if switched)
     const entries = await getSalesHistory();
 
     if (!entries || entries.length === 0) {
