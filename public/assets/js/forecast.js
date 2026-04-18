@@ -2,7 +2,7 @@
 // HisaabPro — ML Forecast Integration
 // =========================================
 
-const ML_API = window.ML_API_URL || 'https://micathon-finance-production-d9f6.up.railway.app/';
+const ML_API = window.ML_API_URI || 'https://micathon-finance-production-d9f6.up.railway.app';
 const ML_RETRY_MS = 30000;
 
 let lastForecastSource = 'ml';
