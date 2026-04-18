@@ -20,14 +20,11 @@ app = FastAPI(
 # ── CORS ──────────────────────────────────────────────────────────────────────
 # Allow your Netlify frontend to call this API
 app.add_middleware(
+    app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://your-hisaabpro-site.netlify.app",  # ← replace with your Netlify URL
-        "http://localhost:3000",                      # for local dev
-        "http://127.0.0.1:5500",                     # VS Code Live Server
-    ],
+    allow_origins=["*"],  # or replace * with your frontend URL
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 

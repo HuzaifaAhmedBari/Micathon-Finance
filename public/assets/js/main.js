@@ -43,6 +43,16 @@ function clearSession() {
   localStorage.removeItem(HP_SESSION_KEY);
 }
 
+function readSession() {
+  return safeJsonParse(localStorage.getItem(HP_SESSION_KEY), null);
+}
+
+function hasActiveSession() {
+  const session = readSession();
+  const email = String(session && session.email ? session.email : '').trim();
+  return email.length > 0;
+}
+
 function getDisplayName(account) {
   return [account.firstName, account.lastName].filter(Boolean).join(' ').trim() || account.storeName || '';
 }
@@ -103,6 +113,7 @@ function syncAccountChrome() {
 
 window.HPAccount = {
   readAccount,
+  readSession,
   writeAccount,
   readPreferences,
   writePreferences,
@@ -112,6 +123,27 @@ window.HPAccount = {
   getInitials,
   syncAccountChrome,
 };
+
+function enforceAuthRoute() {
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  const publicPages = new Set(['login.html', 'register.html']);
+  const isPublicPage = publicPages.has(currentPage);
+  const authenticated = hasActiveSession();
+
+  if (!authenticated && !isPublicPage) {
+    window.location.replace('login.html');
+    return false;
+  }
+
+  if (authenticated && isPublicPage) {
+    window.location.replace('index.html');
+    return false;
+  }
+
+  return true;
+}
+
+enforceAuthRoute();
 
 // ---- Sidebar Toggle (Mobile) ----
 const sidebar = document.getElementById('sidebar');
