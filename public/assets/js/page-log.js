@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', async () => {
   // Wait for async store to initialize
-  await HP.init();
+  try {
+    await HP.init();
+  } catch (err) {
+    console.error("Init failed:", err);
+  }
 
   // ── State ──────────────────────────────────────────────────────
   let currentType = 'sale';   // 'sale' | 'expense'
@@ -71,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const pickerList    = document.getElementById('pickerList');
   const qtyRow        = document.getElementById('qtyRow');
   const qtyInput      = document.getElementById('qtyInput');
-  const qtyUnitInput  = document.getElementById('qtyUnitInput');
+  const qtyUnitDisplay = document.getElementById('qtyUnitDisplay');
 
   async function buildPickerList(query) {
     pickerList.innerHTML = '';
@@ -132,7 +136,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const addNewEl = document.createElement('div');
     addNewEl.className = 'picker-item';
     addNewEl.innerHTML = `<span class="picker-item-name" style="color:var(--emerald);font-weight:600">➕ Add New Inventory Item...</span>`;
-    addNewEl.addEventListener('click', () => { window.location.href = 'inventory.html'; });
+    addNewEl.addEventListener('click', () => { window.location.href = 'inventory.html?action=add-item'; });
     pickerList.appendChild(addNewEl);
   }
 
@@ -175,7 +179,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (item.badge === 'restock' || item.badge === 'sale') {
       qtyRow.classList.add('visible');
       document.getElementById('qtyInputLabel').textContent = item.badge === 'sale' ? 'Quantity Sold' : 'Quantity Restocked';
-      qtyUnitInput.value = item.unit || '';
+      qtyUnitDisplay.textContent = item.unit || 'pcs';
       qtyInput.value = '1'; // Default to 1
       
       // Auto-calculate logic
@@ -296,7 +300,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       type: currentType,
       amount,
       unit: selectedItem.unit || 'pcs', 
-      notes: notesVal || (qty > 0 ? (currentType === 'sale' ? `-${qty} ${qtyUnitInput.value}` : `+${qty} ${qtyUnitInput.value}`) : ''),
+      notes: notesVal || (qty > 0 ? (currentType === 'sale' ? `-${qty} ${qtyUnitDisplay.textContent}` : `+${qty} ${qtyUnitDisplay.textContent}`) : ''),
       inventoryItemId: selectedItem.inventoryItemId || null,
       inventoryQtyChange: (['restock', 'sale'].includes(selectedItem.badge) && qty > 0) ? qty : null,
       isUtility: selectedItem.badge === 'expense' && !selectedItem.inventoryItemId,

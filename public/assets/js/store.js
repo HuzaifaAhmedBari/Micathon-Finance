@@ -91,12 +91,17 @@ const HP = (() => {
 
   async function getLowStockItems() {
     const inv = await getInventory();
-    return inv.filter(i => i.qty <= i.lowThreshold);
+    return inv.filter(i => (i.qty || 0) <= (i.lowThreshold || 5));
   }
 
   function getStockStatus(item) {
-    const pct = item.qty / item.maxQty;
-    if (pct <= 0.15 || item.qty <= item.lowThreshold) return 'low';
+    if (!item) return 'good';
+    const qty = item.qty || 0;
+    const max = item.maxQty || 20;
+    const threshold = item.lowThreshold || 5;
+    
+    const pct = qty / max;
+    if (pct <= 0.15 || qty <= threshold) return 'low';
     if (pct <= 0.45) return 'medium';
     return 'good';
   }

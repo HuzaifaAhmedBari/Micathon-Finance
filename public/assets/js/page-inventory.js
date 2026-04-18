@@ -1,5 +1,12 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  await HP.init();
+  try {
+    await HP.init();
+  } catch (err) {
+    console.error("Init failed:", err);
+    const tbody = document.getElementById('invTableBody');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--coral)">Failed to load data from server.</td></tr>`;
+    return;
+  }
 
   const PAGE_SIZE = 10;
   let currentPage = 1;
@@ -245,7 +252,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     await renderTable();
   }
 
-  await refreshAll();
+  try {
+    await refreshAll();
+  } catch (err) {
+    console.error("Delayed refresh failed:", err);
+    const tbody = document.getElementById('invTableBody');
+    if (tbody && tbody.innerHTML.includes('Loading')) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--coral)">Something went wrong while rendering. Please refersh.</td></tr>`;
+    }
+  }
 
   // ── Auto-fill Sale Price logic ─────────────────────────────────
   const costInput = document.getElementById('newItemCost');

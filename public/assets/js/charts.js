@@ -192,34 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ---- Inventory: Stock Health Donut ----
-  const stockCanvas = document.getElementById('stockChart');
-  if (stockCanvas) {
-    new Chart(stockCanvas, {
-      type: 'doughnut',
-      data: {
-        labels: ['Good Stock', 'Medium Stock', 'Low Stock'],
-        datasets: [{
-          data: [58, 29, 13],
-          backgroundColor: ['rgba(5,150,105,0.85)', 'rgba(217,119,6,0.75)', 'rgba(220,38,38,0.75)'],
-          borderWidth: 0, hoverOffset: 6,
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '68%',
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { color: '#64748b', font: { size: 12, family: 'Manrope' }, usePointStyle: true, padding: 14 }
-          },
-          tooltip: {
-            backgroundColor: '#fff', titleColor: '#0f172a', bodyColor: '#64748b',
-            borderColor: '#e2e8f0', borderWidth: 1,
-            callbacks: { label: ctx => `  ${ctx.label}: ${ctx.raw}%` }
-          }
-        }
-      }
-    });
-  }
+  // Removed static mock. Now controlled by page-inventory.js
 });
 
 // =========================================
